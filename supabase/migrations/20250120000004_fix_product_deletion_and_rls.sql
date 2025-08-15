@@ -175,8 +175,8 @@ DROP POLICY IF EXISTS "Vendors can delete own products" ON public.products;
 DROP POLICY IF EXISTS "Admins can manage all products" ON public.products;
 
 -- Create new policies that support admin operations
--- Everyone can view active products
-CREATE POLICY "Users can view active products" ON public.products
+-- Everyone can view active products (public access)
+CREATE POLICY "Public can view active products" ON public.products
     FOR SELECT USING (is_active = true);
 
 -- Vendors can view their own products (including inactive ones)
@@ -235,6 +235,10 @@ CREATE POLICY "Admins can insert products" ON public.products
 -- Ensure the products table has RLS enabled
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
+-- Grant public access to view products (no authentication required)
+GRANT SELECT ON public.products TO anon;
+GRANT SELECT ON public.products TO authenticated;
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_products_vendor_id ON public.products(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active);
@@ -279,3 +283,15 @@ CREATE POLICY "Admins can delete deleted products" ON public.deleted_products
 
 -- Ensure the deleted_products table has RLS enabled
 ALTER TABLE public.deleted_products ENABLE ROW LEVEL SECURITY;
+
+-- Also ensure categories table is publicly accessible
+GRANT SELECT ON public.categories TO anon;
+GRANT SELECT ON public.categories TO authenticated;
+
+-- Create RLS policy for categories (public read access)
+DROP POLICY IF EXISTS "Public can view categories" ON public.categories;
+CREATE POLICY "Public can view categories" ON public.categories
+    FOR SELECT USING (true);
+
+-- Ensure categories table has RLS enabled
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;

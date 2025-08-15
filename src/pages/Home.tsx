@@ -54,6 +54,11 @@ export default function Home() {
 
       setCategories(categoriesWithCounts);
       setProducts(productsData || []);
+      
+      // Debug logging
+      console.log('Products fetched:', productsData?.length || 0);
+      console.log('Categories fetched:', categoriesData?.length || 0);
+      console.log('Vendors fetched:', vendorData?.length || 0);
     } catch (error) {
       console.error('Error fetching data:', error);
       console.error('Error fetching vendors:', error);
