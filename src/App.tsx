@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { MapPin, Skull } from 'lucide-react';
 import { Country, State } from 'country-state-city';
 import { supabase } from './lib/supabase';
+import { useReferralTracking } from './hooks/useReferralTracking';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import Home from './pages/Home';
@@ -20,6 +21,9 @@ import AdminCategories from './pages/admin/AdminCategories';
 import AdminVendors from './pages/admin/AdminVendors';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminReferrals from './pages/admin/AdminReferrals';
+import SuperAdmin from './pages/admin/SuperAdmin';
+import ReferralTracker from './components/ReferralTracker';
 import GlobalAlert from './components/GlobalAlert';
 
 interface LocationData {
@@ -50,6 +54,7 @@ function App() {
   });
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   // Get supported countries with their states
@@ -79,6 +84,7 @@ function App() {
   const checkAdminStatus = async (user: any) => {
     if (!user) {
       setIsAdmin(false);
+      setIsSuperAdmin(false);
       setCheckingAdmin(false);
       return;
     }
@@ -86,18 +92,21 @@ function App() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin, is_super_admin')
         .eq('id', user.id)
         .single();
 
       if (!error && data) {
         setIsAdmin(data.is_admin || false);
+        setIsSuperAdmin(data.is_super_admin || false);
       } else {
         setIsAdmin(false);
+        setIsSuperAdmin(false);
       }
     } catch (err) {
       console.error('Error checking admin status:', err);
       setIsAdmin(false);
+      setIsSuperAdmin(false);
     } finally {
       setCheckingAdmin(false);
     }
@@ -207,6 +216,9 @@ function App() {
 
   return (
     <Router>
+      {/* Referral tracking component - must be inside Router context */}
+      <ReferralTracker />
+      
       <Routes>
         <Route path="/login" element={<Login />} />
         
@@ -214,15 +226,21 @@ function App() {
         <Route path="/admin/*" element={
           checkingAdmin ? (
             <div className="text-white p-10">Checking access...</div>
-          ) : user && isAdmin ? (
-            <AdminLayout>
+          ) : user && (isAdmin || isSuperAdmin) ? (
+            <AdminLayout isSuperAdmin={isSuperAdmin}>
               <Routes>
                 <Route path="/" element={<AdminDashboard />} />
                 <Route path="/products" element={<AdminProducts />} />
-                <Route path="/categories" element={<AdminCategories />} />
-                <Route path="/vendors" element={<AdminVendors />} />
-                <Route path="/orders" element={<AdminOrders />} />
-                <Route path="/users" element={<AdminUsers />} />
+                <Route path="/referrals" element={<AdminReferrals />} />
+                {isSuperAdmin && (
+                  <>
+                    <Route path="/categories" element={<AdminCategories />} />
+                    <Route path="/vendors" element={<AdminVendors />} />
+                    <Route path="/orders" element={<AdminOrders />} />
+                    <Route path="/users" element={<AdminUsers />} />
+                    <Route path="/super-admin" element={<SuperAdmin />} />
+                  </>
+                )}
               </Routes>
             </AdminLayout>
           ) : (
@@ -236,6 +254,7 @@ function App() {
             selectedCountry={selectedCountry} 
             selectedState={selectedState} 
             isAdmin={isAdmin}
+            isSuperAdmin={isSuperAdmin}
             onLocationChange={handleLocationChange}
           >
             <Routes>

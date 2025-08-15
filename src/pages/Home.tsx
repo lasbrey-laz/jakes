@@ -161,7 +161,13 @@ export default function Home() {
                 className="bg-gray-900 border border-gray-700 hover:border-green-500 rounded-lg overflow-hidden cursor-pointer transition-all hover:bg-gray-800"
               >
                 <div className="p-6">
-                  {product.image_url ? (
+                  {product.image_urls && product.image_urls.length > 0 ? (
+                    <img
+                      src={product.image_urls[0]}
+                      alt={product.title}
+                      className="w-full h-32 object-cover rounded mb-4"
+                    />
+                  ) : product.image_url ? (
                     <img
                       src={product.image_url}
                       alt={product.title}
@@ -186,7 +192,7 @@ export default function Home() {
                     Vendor: <span className="text-green-400">{product.profiles?.username}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Stock: {product.stock_quantity}</span>
+                    <span>Stock: {product.is_available ? 'Available' : 'Not in Stock'}</span>
                     {/* Shipping indicators */}
                     <div className="flex gap-1">
                       {product.shipping_worldwide && (

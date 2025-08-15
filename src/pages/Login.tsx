@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Skull, Eye, EyeOff, Shield } from 'lucide-react';
+import { useReferralTracking } from '../hooks/useReferralTracking';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +13,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { markConversion } = useReferralTracking();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +49,13 @@ export default function Login() {
           ]);
         
         if (profileError) throw profileError;
+        
+        // Mark referral conversion if user came through a referral link
+        const user = (await supabase.auth.getUser()).data.user;
+        if (user) {
+          await markConversion(user.id, 'signup');
+        }
+        
         navigate('/');
       }
     } catch (error: any) {

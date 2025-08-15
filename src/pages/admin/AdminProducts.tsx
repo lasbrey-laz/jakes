@@ -221,7 +221,7 @@ export default function AdminProducts() {
           console.log('Read back created product:', readData);
         }
       }
-      
+
       // Reset form
       setNewProduct({
         vendor_id: '',
@@ -336,17 +336,19 @@ export default function AdminProducts() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
-
+    const reason = prompt('Please provide a reason for deletion (optional):');
+    
     try {
-      const { error } = await supabaseAdmin
-        .from('products')
-        .delete()
-        .eq('id', id);
+      // Use the new function to move product to deleted_products table
+      const { data, error } = await supabase
+        .rpc('move_product_to_deleted', {
+          p_product_id: id,
+          p_deletion_reason: reason
+        });
 
       if (error) throw error;
       fetchData();
-      showGlobalSuccess('Product deleted successfully!');
+      showGlobalSuccess('Product moved to deleted products. Super admin can review and restore if needed.');
     } catch (error) {
       console.error('Error deleting product:', error);
       showGlobalError('Error deleting product');
@@ -634,16 +636,18 @@ export default function AdminProducts() {
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-gray-700 rounded flex items-center justify-center">
-                        {product.image_url ? (
+                        {product.image_urls && product.image_urls.length > 0 ? (
+                          <img src={product.image_urls[0]} alt={product.title} className="w-full h-full object-cover rounded" />
+                        ) : product.image_url ? (
                           <img src={product.image_url} alt={product.title} className="w-full h-full object-cover rounded" />
                         ) : (
                           <Package className="w-6 h-6 text-gray-400" />
                         )}
                       </div>
-                                              <div>
-                          <div className="text-white font-semibold">{product.title}</div>
-                          <div className="text-gray-400 text-sm">Views: {product.view_count || 0}</div>
-                        </div>
+                      <div>
+                        <div className="text-white font-semibold">{product.title}</div>
+                        <div className="text-gray-400 text-sm">Views: {product.view_count || 0}</div>
+                      </div>
                     </div>
                   </td>
                   <td className="p-4">
@@ -857,7 +861,7 @@ export default function AdminProducts() {
                   <p className="text-gray-400 mb-4">
                     Select images from your device (JPG, PNG, GIF - Max 5MB each)
                   </p>
-                  <input
+                      <input
                     type="file"
                     multiple
                     accept="image/*"
@@ -909,14 +913,14 @@ export default function AdminProducts() {
                             alt={`Product image ${index + 1}`}
                             className="w-full h-24 object-cover rounded border border-gray-600"
                           />
-                          <button
-                            type="button"
+                  <button
+                    type="button"
                             onClick={() => removeImage(index, setNewProduct, newProduct)}
                             className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
+                  >
                             <X className="w-3 h-3" />
-                          </button>
-                        </div>
+                  </button>
+                </div>
                       ))}
                     </div>
                   </div>
@@ -960,7 +964,7 @@ export default function AdminProducts() {
                     <label className="block text-green-400 text-sm mb-2">Stock Status</label>
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2">
-                        <input
+                    <input
                           type="checkbox"
                           checked={newProduct.is_available}
                           onChange={(e) => setNewProduct({ ...newProduct, is_available: e.target.checked })}
@@ -1064,7 +1068,7 @@ export default function AdminProducts() {
               {/* Enhanced Shipping Methods */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
+                <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
                   <button
                     type="button"
                     onClick={() => setShowShippingModal(true)}
@@ -1077,9 +1081,9 @@ export default function AdminProducts() {
                 
                 {/* Selected Shipping Methods */}
                 {Array.isArray(newProduct.shipping_methods) && newProduct.shipping_methods.length > 0 ? (
-                  <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                     {newProduct.shipping_methods.map((method: string) => (
-                      <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
+                    <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 text-sm font-medium">{method}</span>
                           <button
@@ -1099,42 +1103,42 @@ export default function AdminProducts() {
                     <p className="text-gray-500 text-xs mt-1">Click "Add Method" to get started</p>
                   </div>
                 )}
-              </div>
-
+                      </div>
+                      
               {/* Shipping Costs */}
               <div className="grid md:grid-cols-3 gap-4">
-                <div>
+                        <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost USD</label>
-                  <input
-                    type="number"
-                    step="0.01"
+                          <input
+                            type="number"
+                            step="0.01"
                     value={newProduct.shipping_cost_usd}
                     onChange={(e) => setNewProduct({ ...newProduct, shipping_cost_usd: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost BTC</label>
-                  <input
-                    type="number"
-                    step="0.00000001"
+                          <input
+                            type="number"
+                            step="0.00000001"
                     value={newProduct.shipping_cost_btc}
                     onChange={(e) => setNewProduct({ ...newProduct, shipping_cost_btc: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00000000"
-                  />
-                </div>
-                <div>
+                            placeholder="0.00000000"
+                          />
+                        </div>
+                        <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost XMR</label>
-                  <input
-                    type="number"
-                    step="0.000000000001"
+                          <input
+                            type="number"
+                            step="0.000000000001"
                     value={newProduct.shipping_cost_xmr}
                     onChange={(e) => setNewProduct({ ...newProduct, shipping_cost_xmr: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.000000000000"
-                  />
+                            placeholder="0.000000000000"
+                          />
                 </div>
               </div>
 
@@ -1346,7 +1350,7 @@ export default function AdminProducts() {
                   <p className="text-gray-400 mb-4">
                     Select images from your device (JPG, PNG, GIF - Max 5MB each)
                   </p>
-                  <input
+                      <input
                     type="file"
                     multiple
                     accept="image/*"
@@ -1398,17 +1402,17 @@ export default function AdminProducts() {
                             alt={`Product image ${index + 1}`}
                             className="w-full h-24 object-cover rounded border border-gray-600"
                           />
-                          <button
-                            type="button"
+                  <button
+                    type="button"
                             onClick={() => removeImage(index, setEditingProduct, editingProduct)}
                             className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
+                  >
                             <X className="w-3 h-3" />
-                          </button>
-                        </div>
+                  </button>
+                </div>
                       ))}
-                    </div>
-                  </div>
+              </div>
+                </div>
                 )}
               </div>
 
@@ -1503,7 +1507,7 @@ export default function AdminProducts() {
                           </button>
                         </div>
                       ))}
-                    </div>
+                  </div>
                   ) : (
                     <div className="text-center py-3 bg-gray-800 border border-gray-600 rounded">
                       <p className="text-gray-400 text-sm">No countries selected</p>
@@ -1604,7 +1608,7 @@ export default function AdminProducts() {
                 {/* Enhanced Shipping Methods */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
+                  <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
                     <button
                       type="button"
                       onClick={() => setShowShippingModal(true)}
@@ -1617,9 +1621,9 @@ export default function AdminProducts() {
                   
                   {/* Selected Shipping Methods */}
                   {editingProduct.shipping_methods && editingProduct.shipping_methods.length > 0 ? (
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                       {editingProduct.shipping_methods.map((method: string) => (
-                        <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
+                      <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
                           <div className="flex items-center justify-between">
                             <span className="text-green-400 text-sm font-medium">{method}</span>
                             <button
@@ -1640,42 +1644,42 @@ export default function AdminProducts() {
                     </div>
                   )}
                 </div>
-              </div>
-
+                        </div>
+                        
               {/* Shipping Costs */}
               <div className="grid md:grid-cols-3 gap-4">
-                <div>
+                          <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost USD</label>
-                  <input
-                    type="number"
-                    step="0.01"
+                            <input
+                              type="number"
+                              step="0.01"
                     value={editingProduct.shipping_cost_usd || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_usd: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost BTC</label>
-                  <input
-                    type="number"
-                    step="0.00000001"
+                            <input
+                              type="number"
+                              step="0.00000001"
                     value={editingProduct.shipping_cost_btc || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_btc: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00000000"
-                  />
-                </div>
-                <div>
+                              placeholder="0.00000000"
+                            />
+                          </div>
+                          <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost XMR</label>
-                  <input
-                    type="number"
-                    step="0.000000000001"
+                            <input
+                              type="number"
+                              step="0.000000000001"
                     value={editingProduct.shipping_cost_xmr || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_xmr: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.000000000000"
-                  />
+                              placeholder="0.000000000000"
+                            />
                 </div>
               </div>
 

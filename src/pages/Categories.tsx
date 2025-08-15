@@ -245,7 +245,13 @@ export default function Categories() {
               {viewMode === 'grid' ? (
                 <>
                   <div className="p-6">
-                    {product.image_url ? (
+                    {product.image_urls && product.image_urls.length > 0 ? (
+                      <img
+                        src={product.image_urls[0]}
+                        alt={product.title}
+                        className="w-full h-32 object-cover rounded mb-4"
+                      />
+                    ) : product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.title}
@@ -273,7 +279,7 @@ export default function Categories() {
                       Vendor: <span className="text-green-400">{product.profiles?.username}</span>
                     </div>
                     <div className="text-xs text-gray-500">
-                      Stock: {product.stock_quantity}
+                      Stock: {product.is_available ? 'Available' : 'Not in Stock'}
                     </div>
                   </div>
                   <div className="bg-gray-800 p-3 text-center">
@@ -285,7 +291,13 @@ export default function Categories() {
               ) : (
                 <>
                   <div className="w-20 h-20 mr-4 flex-shrink-0">
-                    {product.image_url ? (
+                    {product.image_urls && product.image_urls.length > 0 ? (
+                      <img
+                        src={product.image_urls[0]}
+                        alt={product.title}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    ) : product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.title}
@@ -313,7 +325,7 @@ export default function Categories() {
                         <Star className="w-4 h-4 text-yellow-500 fill-current" />
                         <span className="text-sm text-gray-400">{product.profiles?.reputation_score?.toFixed(1) || '0.0'}</span>
                       </div>
-                      <span className="text-xs text-gray-500">Stock: {product.stock_quantity}</span>
+                      <span className="text-xs text-gray-500">Stock: {product.is_available ? 'Available' : 'Not in Stock'}</span>
                       {/* Shipping indicators */}
                       <div className="flex gap-1">
                         {product.shipping_worldwide && (

@@ -8,16 +8,19 @@ import {
   Tags,
   UserCheck,
   BarChart3,
-  LogOut
+  LogOut,
+  Link,
+  Crown
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
+  isSuperAdmin?: boolean;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminLayout({ children, isSuperAdmin = false }: AdminLayoutProps) {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,10 +49,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const menuItems = [
     { path: '/admin', icon: BarChart3, label: 'Dashboard' },
     { path: '/admin/products', icon: Package, label: 'Products' },
-    { path: '/admin/categories', icon: Tags, label: 'Categories' },
-    { path: '/admin/vendors', icon: UserCheck, label: 'Vendors' },
-    { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
-    { path: '/admin/users', icon: Users, label: 'Users' }
+    { path: '/admin/referrals', icon: Link, label: 'Referrals' },
+    ...(isSuperAdmin ? [
+      { path: '/admin/categories', icon: Tags, label: 'Categories' },
+      { path: '/admin/vendors', icon: UserCheck, label: 'Vendors' },
+      { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+      { path: '/admin/users', icon: Users, label: 'Users' },
+      { path: '/admin/super-admin', icon: Crown, label: 'Super Admin' }
+    ] : [])
   ];
 
   return (
@@ -91,7 +98,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="p-4 border-t border-gray-700">
           <div className="mb-4">
             <p className="text-green-400 text-sm font-semibold">{user?.email}</p>
-            <p className="text-gray-500 text-xs">Administrator</p>
+            <p className="text-gray-500 text-xs">
+              {isSuperAdmin ? 'Super Administrator' : 'Administrator'}
+            </p>
           </div>
           <div className="flex gap-2">
             <button
