@@ -9,6 +9,8 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState<any[]>([]);
+  const [productsCount, setProductsCount] = useState<number>(0);
+  const [vendorsCount, setVendorsCount] = useState<number>(0);
 
   useEffect(() => {
     fetchData();
@@ -16,9 +18,9 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const { data: vendorData, error: vendorError } = await supabase
+      const { data: vendorData, count: vendorsCount, error: vendorError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('is_vendor', true)
         .eq('is_active', true)
         .eq('vendor_status', 'approved');
@@ -26,6 +28,7 @@ export default function Home() {
       if (vendorError) throw vendorError;
 
       setVendors(vendorData || []);
+      setVendorsCount(vendorsCount || 0);
       // Fetch categories from backend
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
@@ -34,17 +37,19 @@ export default function Home() {
 
       if (categoriesError) throw categoriesError;
 
-      // Fetch products to get counts and featured products
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select(`
+      // Fetch products count and featured products separately
+      const [productsCountRes, productsDataRes] = await Promise.all([
+        supabase.from('products').select('*', { count: 'exact' }).eq('is_active', true),
+        supabase.from('products').select(`
           *,
           profiles!products_vendor_id_fkey (username, reputation_score)
-        `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        `).eq('is_active', true).order('created_at', { ascending: false }).limit(8)
+      ]);
 
-      if (productsError) throw productsError;
+      const { data: productsData, error: productsError } = productsDataRes;
+      const { count: productsCount, error: countError } = productsCountRes;
+
+      if (productsError || countError) throw productsError || countError;
 
       // Add product counts to categories
       const categoriesWithCounts = categoriesData?.map(category => ({
@@ -54,11 +59,14 @@ export default function Home() {
 
       setCategories(categoriesWithCounts);
       setProducts(productsData || []);
+      setProductsCount(productsCount || 0);
       
       // Debug logging
       console.log('Products fetched:', productsData?.length || 0);
+      console.log('Products count:', productsCount || 0);
       console.log('Categories fetched:', categoriesData?.length || 0);
       console.log('Vendors fetched:', vendorData?.length || 0);
+      console.log('Vendors count:', vendorsCount || 0);
     } catch (error) {
       console.error('Error fetching data:', error);
       console.error('Error fetching vendors:', error);
@@ -84,9 +92,9 @@ export default function Home() {
   };
 
   // Calculate stats
-  const totalVendors = vendors.length;
+  const totalVendors = vendorsCount || 0;
   // const totalVendors = new Set(products.map(p => p.vendor_id)).size;
-  const totalListings = products.length;
+  const totalListings = productsCount || 0;
 
   if (loading) {
     return (
