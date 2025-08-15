@@ -547,20 +547,90 @@ export default function ProductDetail() {
                     <div>
                       <h3 className="font-bold text-white mb-4">Policies & Information</h3>
                       
-                      {(product.refund_policy || product.package_lost_policy) && (
-                        <div className="space-y-4 mb-6">
-                          {product.refund_policy && (
-                            <div className="bg-gray-700 rounded-lg p-4">
-                              <h4 className="font-semibold text-green-400 mb-2">Refund Policy:</h4>
-                              <p className="text-gray-300 text-sm">{product.refund_policy}</p>
+                      {/* Refund Policy Section */}
+                      <div className="bg-gray-700 rounded-lg p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-green-400 text-lg">Refund Policy</h4>
+                            <p className="text-gray-400 text-sm">Your protection and satisfaction guaranteed</p>
+                          </div>
+                        </div>
+                        
+                        {product.refund_policy ? (
+                          <div className="space-y-4">
+                            <div className="bg-gray-800 rounded-lg p-4">
+                              <h5 className="font-semibold text-white mb-2">Vendor's Refund Policy:</h5>
+                              <p className="text-gray-300 text-sm leading-relaxed">{product.refund_policy}</p>
                             </div>
-                          )}
-                          {product.package_lost_policy && (
-                            <div className="bg-gray-700 rounded-lg p-4">
-                              <h4 className="font-semibold text-green-400 mb-2">Package Lost Policy:</h4>
-                              <p className="text-gray-300 text-sm">{product.package_lost_policy}</p>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-800 rounded-lg p-4">
+                            <p className="text-gray-400 text-sm italic">No specific refund policy provided by vendor</p>
+                          </div>
+                        )}
+                        
+                        {/* Platform Refund Policy */}
+                        <div className="mt-4 bg-green-900/20 border border-green-500 rounded-lg p-4">
+                          <h5 className="font-semibold text-green-400 mb-2">Platform Protection Policy:</h5>
+                          <div className="space-y-2 text-sm text-gray-300">
+                            <div className="flex items-start gap-2">
+                              <span className="text-green-400">✓</span>
+                              <span>Full refund if product not received within 30 days</span>
                             </div>
-                          )}
+                            <div className="flex items-start gap-2">
+                              <span className="text-green-400">✓</span>
+                              <span>Refund if product significantly differs from description</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-green-400">✓</span>
+                              <span>Dispute resolution within 48 hours</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-green-400">✓</span>
+                              <span>Escrow protection until order completion</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Package Lost Policy */}
+                      {product.package_lost_policy && (
+                        <div className="bg-gray-700 rounded-lg p-6 mb-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                              <Package className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-blue-400 text-lg">Package Lost Policy</h4>
+                              <p className="text-gray-400 text-sm">What happens if your package goes missing</p>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-800 rounded-lg p-4">
+                            <p className="text-gray-300 text-sm leading-relaxed">{product.package_lost_policy}</p>
+                          </div>
+                          
+                          {/* Platform Package Protection */}
+                          <div className="mt-4 bg-blue-900/20 border border-blue-500 rounded-lg p-4">
+                            <h5 className="font-semibold text-blue-400 mb-2">Platform Package Protection:</h5>
+                            <div className="space-y-2 text-sm text-gray-300">
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-400">✓</span>
+                                <span>Tracking number required for all shipments</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-400">✓</span>
+                                <span>Full refund if package lost in transit</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-400">✓</span>
+                                <span>Insurance coverage for high-value items</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
 
