@@ -60,11 +60,28 @@ export default function Categories() {
       const { count: totalProductsCount } = productsCountRes || {};
 
       setSubcategories(subcategoriesData || []);
+      // Get accurate category counts by querying each category separately
+      const categoryCounts = await Promise.all(
+        (categoriesData || []).map(async (cat) => {
+          const { count } = await supabase
+            .from('products')
+            .select('*', { count: 'exact' })
+            .eq('is_active', true)
+            .eq('category', cat.name);
+          
+          return { category: cat.name, count: count || 0 };
+        })
+      );
+
+      const categoryCountsMap = new Map(
+        categoryCounts.map(item => [item.category, item.count])
+      );
+
       setCategories([
         { id: 'all', name: 'All Categories', count: totalProductsCount || 0 },
         ...(categoriesData || []).map(cat => ({
           ...cat,
-          count: productsData?.filter(p => p.category === cat.name).length || 0
+          count: categoryCountsMap.get(cat.name) || 0
         }))
       ]);
 

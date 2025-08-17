@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 export default function Home() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
+  console.log(categories);
+  
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState<any[]>([]);
