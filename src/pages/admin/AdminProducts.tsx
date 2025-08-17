@@ -1142,6 +1142,30 @@ export default function AdminProducts() {
                 </div>
               </div>
 
+              {/* Policies */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-green-400 text-sm mb-2">Refund Policy</label>
+                  <textarea
+                    value={newProduct.refund_policy}
+                    onChange={(e) => setNewProduct({ ...newProduct, refund_policy: e.target.value })}
+                    rows={3}
+                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                    placeholder="Refund policy details..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-green-400 text-sm mb-2">Package Lost Policy</label>
+                  <textarea
+                    value={newProduct.package_lost_policy}
+                    onChange={(e) => setNewProduct({ ...newProduct, package_lost_policy: e.target.value })}
+                    rows={3}
+                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                    placeholder="Package lost policy details..."
+                  />
+                </div>
+              </div>
+
               {/* Additional Options */}
               <div className="grid md:grid-cols-2 gap-4">
                 <label className="flex items-center gap-2">

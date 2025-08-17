@@ -10,7 +10,8 @@ import {
   BarChart3,
   LogOut,
   Link,
-  Crown
+  Crown,
+  MessageSquare
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -55,7 +56,8 @@ export default function AdminLayout({ children, isSuperAdmin = false }: AdminLay
       { path: '/admin/vendors', icon: UserCheck, label: 'Vendors' },
       { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
       { path: '/admin/users', icon: Users, label: 'Users' },
-      { path: '/admin/super-admin', icon: Crown, label: 'Super Admin' }
+      { path: '/admin/super-admin', icon: Crown, label: 'Super Admin' },
+      { path: '/admin/secure-chat', icon: MessageSquare, label: 'Secure Chat' }
     ] : [])
   ];
 

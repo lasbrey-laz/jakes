@@ -23,6 +23,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminReferrals from './pages/admin/AdminReferrals';
 import SuperAdmin from './pages/admin/SuperAdmin';
+import SecureChat from './pages/admin/SecureChat';
 import ReferralTracker from './components/ReferralTracker';
 import GlobalAlert from './components/GlobalAlert';
 
@@ -239,6 +240,7 @@ function App() {
                     <Route path="/orders" element={<AdminOrders />} />
                     <Route path="/users" element={<AdminUsers />} />
                     <Route path="/super-admin" element={<SuperAdmin />} />
+                    <Route path="/secure-chat" element={<SecureChat />} />
                   </>
                 )}
               </Routes>

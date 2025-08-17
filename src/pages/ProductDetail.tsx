@@ -153,14 +153,14 @@ export default function ProductDetail() {
 
     setOrdering(true);
     try {
-      const { error } = await supabase
+              const { error } = await supabase
         .from('orders')
         .insert([{
           buyer_id: user.id,
           vendor_id: product?.vendor_id,
           product_id: product?.id,
           quantity,
-                      total_btc: (product?.price_btc || 0) * quantity,
+          total_btc: getTotalCost('btc'),
           status: 'pending',
           shipping_method: selectedShippingMethod,
           shipping_cost_btc: calculateShippingCost(selectedShippingMethod, 'btc')
@@ -172,7 +172,7 @@ export default function ProductDetail() {
       navigate('/orders');
     } catch (error) {
       console.error('Error placing order:', error);
-      showGlobalError('Error placing order. Please try again.');
+      showGlobalError('You must create an account to place orders. Please login or create an account first.');
     } finally {
       setOrdering(false);
     }
@@ -361,10 +361,6 @@ export default function ProductDetail() {
                         </div>
                         
                         <div className="bg-gray-700 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-gray-400">Stock:</span>
-                            <span className="text-white font-bold">{product.stock_quantity}</span>
-                          </div>
                           <div className="flex items-center justify-between">
                             <span className="text-gray-400">Views:</span>
                             <span className="text-white font-bold">{product.view_count || generateRandomViews()}</span>
@@ -882,10 +878,10 @@ export default function ProductDetail() {
                   )}
 
                   <button
-                    onClick={() => user ? null : navigate('/login')}
+                    onClick={() => user ? navigate('/admin/secure-chat') : navigate('/login')}
                     className="w-full bg-gray-700 hover:bg-gray-600 text-green-400 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
                   >
-                    <MessageSquare className="w-4 h-4" />
+                    <MessageSquare className="w-6 h-6" />
                     {user ? 'CONTACT VENDOR' : 'LOGIN TO CONTACT VENDOR'}
                   </button>
                 </div>

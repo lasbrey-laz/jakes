@@ -46,20 +46,22 @@ export default function Categories() {
         .select('*, categories(name)')
         .order('name');
 
-      // Fetch products - no auth required
-      const { data: productsData } = await supabase
-        .from('products')
-        .select(`
+      // Fetch products count and data separately for efficiency
+      const [productsCountRes, productsDataRes] = await Promise.all([
+        supabase.from('products').select('*', { count: 'exact' }).eq('is_active', true),
+        supabase.from('products').select(`
           *,
           profiles!products_vendor_id_fkey (username, reputation_score),
           subcategories(name, category_id)
-        `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        `).eq('is_active', true).order('created_at', { ascending: false })
+      ]);
+
+      const { data: productsData } = productsDataRes;
+      const { count: totalProductsCount } = productsCountRes || {};
 
       setSubcategories(subcategoriesData || []);
       setCategories([
-        { id: 'all', name: 'All Categories', count: productsData?.length || 0 },
+        { id: 'all', name: 'All Categories', count: totalProductsCount || 0 },
         ...(categoriesData || []).map(cat => ({
           ...cat,
           count: productsData?.filter(p => p.category === cat.name).length || 0
