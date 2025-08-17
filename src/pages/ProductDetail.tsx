@@ -346,7 +346,13 @@ export default function ProductDetail() {
                   {activeTab === 'overview' && (
                     <div>
                       <h3 className="font-bold text-white mb-4">Description</h3>
-                      <p className="text-gray-300 leading-relaxed mb-6">{product.description}</p>
+                      <textarea
+                        value={product.description}
+                        readOnly
+                        rows={7}
+                        className="w-full bg-gray-700 border border-gray-600 text-gray-300 p-4 rounded-lg resize-none overflow-y-auto leading-relaxed"
+                        style={{ minHeight: 'auto' }}
+                      />
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-gray-700 rounded-lg p-4">
