@@ -70,6 +70,7 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>('');
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showVendorModal, setShowVendorModal] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -344,7 +345,12 @@ export default function ProductDetail() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Vendor:</span>
-                    <span className="text-orange-400 font-bold">{vendor?.username}</span>
+                    <button 
+                      onClick={() => setShowVendorModal(true)}
+                      className="text-orange-400 font-bold hover:text-orange-300 cursor-pointer transition-colors"
+                    >
+                      {vendor?.username}
+                    </button>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Rating:</span>
@@ -505,6 +511,73 @@ export default function ProductDetail() {
         productId={product?.id}
         productTitle={product?.title}
       />
+
+      {/* Vendor Profile Modal */}
+      {showVendorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Vendor Profile</h2>
+              <button
+                onClick={() => setShowVendorModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-gray-600 rounded-full mx-auto mb-3 flex items-center justify-center">
+                  <User className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white">{vendor?.username}</h3>
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                  <span className="text-yellow-400">{vendor?.reputation_score || 98}%</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 border border-gray-600 rounded">
+                  <div className="text-green-400 font-bold text-xl">{vendor?.total_sales || 0}</div>
+                  <div className="text-gray-400 text-xs">Total Sales</div>
+                </div>
+                <div className="text-center p-3 border border-gray-600 rounded">
+                  <div className="text-blue-400 font-bold text-xl">{vendor?.open_orders || 0}</div>
+                  <div className="text-gray-400 text-xs">Open Orders</div>
+                </div>
+                <div className="text-center p-3 border border-gray-600 rounded">
+                  <div className="text-green-400 font-bold text-xl">{vendor?.disputes_won || 0}</div>
+                  <div className="text-gray-400 text-xs">Disputes Won</div>
+                </div>
+                <div className="text-center p-3 border border-gray-600 rounded">
+                  <div className="text-red-400 font-bold text-xl">{vendor?.disputes_lost || 0}</div>
+                  <div className="text-gray-400 text-xs">Disputes Lost</div>
+                </div>
+              </div>
+
+              <div className="text-center p-3 border border-gray-600 rounded">
+                <div className="text-orange-400 font-bold text-lg">
+                  {product.listing_type?.replace('_', ' ').toUpperCase()}
+                </div>
+                <div className="text-gray-400 text-xs">Vendor Type</div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowVendorModal(false);
+                  setShowChatModal(true);
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                <MessageSquare className="w-5 h-5" />
+                Contact Vendor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
