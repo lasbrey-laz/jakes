@@ -127,10 +127,10 @@ export default function ProductDetail() {
         productCost = (product?.price_usd || 0) * quantity;
         shippingCost = selectedShippingMethod ? calculateShippingCost(selectedShippingMethod, 'usd') : 0;
         break;
-              case 'btc':
-          productCost = (product?.price_btc || 0) * quantity;
-          shippingCost = selectedShippingMethod ? calculateShippingCost(selectedShippingMethod, 'btc') : 0;
-          break;
+      case 'btc':
+        productCost = (product?.price_btc || 0) * quantity;
+        shippingCost = selectedShippingMethod ? calculateShippingCost(selectedShippingMethod, 'btc') : 0;
+        break;
       case 'xmr':
         productCost = (product?.price_xmr || 0) * quantity;
         shippingCost = selectedShippingMethod ? calculateShippingCost(selectedShippingMethod, 'xmr') : 0;
@@ -155,7 +155,7 @@ export default function ProductDetail() {
 
     setOrdering(true);
     try {
-              const { error } = await supabase
+      const { error } = await supabase
         .from('orders')
         .insert([{
           buyer_id: user.id,
@@ -207,92 +207,94 @@ export default function ProductDetail() {
   return (
     <>
       <div className="min-h-screen bg-gray-900 text-white">
-          {/* Header with Breadcrumbs */}
-          <div className="bg-gray-800 border-b border-gray-700">
-            <div className="max-w-4xl mx-auto px-4 py-4">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                  Back
-                </button>
-                
-                {/* Breadcrumbs */}
+        {/* Header with Breadcrumbs */}
+        <div className="bg-gray-800 border-b border-gray-700">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back
+              </button>
+
+                              {/* Breadcrumbs */}
                 <div className="text-orange-400 text-sm">
-                  {product?.category} » {product?.subcategory || 'General'}
+                  {product?.category}
                 </div>
-              </div>
             </div>
           </div>
+        </div>
 
-          <div className="max-w-4xl mx-auto px-4 py-8">
-            {/* Single Column Layout */}
-            <div className="space-y-6">
-              {/* 1. Product Name */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h1 className="text-3xl font-bold text-white mb-2">{product.title}</h1>
-                <div className="text-orange-400 text-sm">
-                  {product?.category} » {product?.subcategory || 'General'}
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          {/* Single Column Layout */}
+          <div className="space-y-6">
+            {/* 1. Product Name */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h1 className="text-3xl font-bold text-white mb-2">{product.title}</h1>
+                              <div className="text-orange-400 text-sm">
+                  {product?.category}
                 </div>
-              </div>
+            </div>
 
-              {/* 2. Product Image */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Pictures</h2>
-                {product.image_urls && product.image_urls.length > 0 ? (
-                  <div className="space-y-4">
-                    {/* Main Image */}
-                    <div className="flex justify-center">
-                      <img
-                        src={product.image_urls[0]}
-                        alt={product.title}
-                        className="w-60 h-60 object-cover rounded-lg"
-                      />
-                    </div>
-                    
-                    {/* Thumbnail Gallery */}
-                    {product.image_urls.length > 1 && (
-                      <div className="grid grid-cols-3 gap-3">
-                        {product.image_urls.map((imageUrl: string, index: number) => (
-                          <div key={index} className="relative group cursor-pointer">
-                            <img
-                              src={imageUrl}
-                              alt={`${product.title} - Image ${index + 1}`}
-                              className="w-full h-24 object-cover rounded border-2 border-gray-600 hover:border-green-400 transition-colors"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
+            {/* 2. Product Image */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Pictures</h2>
+              {product.image_urls && product.image_urls.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Main Image */}
                   <div className="flex justify-center">
                     <img
-                      src={product.image_url || 'https://via.placeholder.com/600x400?text=No+Image'}
+                      src={product.image_urls[0]}
                       alt={product.title}
                       className="w-60 h-60 object-cover rounded-lg"
                     />
                   </div>
-                )}
-              </div>
 
-              {/* 3. Listing */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Listing</h2>
-                <textarea
-                  value={product.description}
-                  readOnly
-                  rows={7}
-                  className="w-full bg-gray-700 border border-gray-600 text-gray-300 p-4 rounded resize-none overflow-y-auto leading-relaxed"
-                  style={{ minHeight: 'auto' }}
-                />
-              </div>
+                  {/* Thumbnail Gallery */}
+                  {product.image_urls.length > 1 && (
+                    <div className="grid grid-cols-3 gap-3">
+                      {product.image_urls.map((imageUrl: string, index: number) => (
+                        <div key={index} className="relative group cursor-pointer">
+                          <img
+                            src={imageUrl}
+                            alt={`${product.title} - Image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded border-2 border-gray-600 hover:border-green-400 transition-colors"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex justify-center">
+                  <img
+                    src={product.image_url || 'https://via.placeholder.com/600x400?text=No+Image'}
+                    alt={product.title}
+                    className="w-60 h-60 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
 
-              {/* 4. Listing Details */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="font-bold text-white mb-4">Listing Details</h3>
+            {/* 3. Listing */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Listing</h2>
+              <textarea
+                value={product.description}
+                readOnly
+                rows={7}
+                className="w-full bg-gray-700 border border-gray-600 text-gray-300 p-4 rounded resize-none overflow-y-auto leading-relaxed"
+                style={{ minHeight: 'auto' }}
+              />
+            </div>
+
+            {/* 4. Listing Details */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="font-bold text-white mb-4">Listing Details</h3>
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Column - Product Details */}
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Listing type:</span>
@@ -328,25 +330,17 @@ export default function ProductDetail() {
                     <span className="text-gray-400">Unit:</span>
                     <span className="text-white">{product.unit_type || 'Piece'}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Min Order:</span>
+                    <span className="text-white">
+                      {product.price_xmr && `XMR ${product.price_xmr}`}
+                      {product.price_xmr && product.price_usd && ' | '}
+                      {product.price_usd && `USD ${product.price_usd}`}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              {/* 5. Minimum Order */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="font-bold text-white mb-3">Minimum Order</h3>
-                <div className="text-gray-300">
-                  {product.price_xmr && (
-                    <span className="mr-4">XMR {product.price_xmr}</span>
-                  )}
-                  {product.price_usd && (
-                    <span>| USD {product.price_usd}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* 6. Vendor Details */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="font-bold text-white mb-4">Vendor Details</h3>
+                {/* Right Column - Vendor Details */}
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Vendor:</span>
@@ -389,11 +383,13 @@ export default function ProductDetail() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* 7. Ordering Options */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="font-bold text-white mb-4">Ordering Options</h3>
-                
+            {/* 7. Ordering Options */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="font-bold text-white mb-4">Ordering Options</h3>
+              <div className="grid grid-cols-3 gap-4">
+
                 {/* Shipping Options */}
                 <div className="mb-4">
                   <label className="block text-gray-400 text-sm mb-2">Shipping Options</label>
@@ -413,12 +409,6 @@ export default function ProductDetail() {
                 <div className="mb-4">
                   <label className="block text-gray-400 text-sm mb-2">Order Quantity ({product.unit_type || 'Piece'})</label>
                   <div className="flex items-center border border-gray-600 rounded">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="px-3 py-2 text-gray-400 hover:text-white border-r border-gray-600"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
                     <input
                       type="number"
                       value={quantity}
@@ -426,12 +416,6 @@ export default function ProductDetail() {
                       className="flex-1 text-center p-2 bg-gray-700 border-none text-white focus:outline-none"
                       min="1"
                     />
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="px-3 py-2 text-gray-400 hover:text-white border-l border-gray-600"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
 
@@ -447,66 +431,66 @@ export default function ProductDetail() {
                   </select>
                 </div>
               </div>
+            </div>
 
-              {/* 8. Policies */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="font-bold text-white mb-4">Policies</h3>
-                
-                {/* Refund Policy */}
-                {product.refund_policy && (
-                  <div className="mb-4">
-                    <h4 className="text-green-400 font-semibold mb-2">Refund Policy</h4>
-                    <p className="text-gray-300 text-sm">{product.refund_policy}</p>
-                  </div>
-                )}
-                
-                {/* Package Lost Policy */}
-                {product.package_lost_policy && (
-                  <div className="mb-4">
-                    <h4 className="text-blue-400 font-semibold mb-2">Package Lost Policy</h4>
-                    <p className="text-gray-300 text-sm">{product.package_lost_policy}</p>
-                  </div>
-                )}
-                
-                {/* Platform Policies */}
-                <div className="space-y-3">
-                  <div className="bg-green-900/20 border border-green-500 rounded-lg p-4">
-                    <h4 className="text-green-400 font-semibold mb-2">Platform Protection Policy</h4>
-                    <div className="space-y-2 text-sm text-gray-300">
-                      <div className="flex items-start gap-2">
-                        <span className="text-green-400">✓</span>
-                        <span>Full refund if product not received within 30 days</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="text-green-400">✓</span>
-                        <span>Refund if product significantly differs from description</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="text-green-400">✓</span>
-                        <span>Dispute resolution within 48 hours</span>
-                      </div>
+            {/* 8. Policies */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="font-bold text-white mb-4">Policies</h3>
+
+              {/* Refund Policy */}
+              {product.refund_policy && (
+                <div className="mb-4">
+                  <h4 className="text-green-400 font-semibold mb-2">Refund Policy</h4>
+                  <p className="text-gray-300 text-sm">{product.refund_policy}</p>
+                </div>
+              )}
+
+              {/* Package Lost Policy */}
+              {product.package_lost_policy && (
+                <div className="mb-4">
+                  <h4 className="text-blue-400 font-semibold mb-2">Package Lost Policy</h4>
+                  <p className="text-gray-300 text-sm">{product.package_lost_policy}</p>
+                </div>
+              )}
+
+              {/* Platform Policies */}
+              <div className="space-y-3">
+                <div className="bg-green-900/20 border border-green-500 rounded-lg p-4">
+                  <h4 className="text-green-400 font-semibold mb-2">Platform Protection Policy</h4>
+                  <div className="space-y-2 text-sm text-gray-300">
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-400">✓</span>
+                      <span>Full refund if product not received within 30 days</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-400">✓</span>
+                      <span>Refund if product significantly differs from description</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-400">✓</span>
+                      <span>Dispute resolution within 48 hours</span>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-                >
-                  &lt;&lt; Back
-                </button>
-                <button
-                  onClick={handleOrder}
-                  disabled={!product.is_available || ordering}
-                  className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  Add to cart
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => navigate(-1)}
+                className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                &lt;&lt; Back
+              </button>
+              <button
+                onClick={handleOrder}
+                disabled={!product.is_available || ordering}
+                className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Add to cart
+              </button>
             </div>
           </div>
         </div>
