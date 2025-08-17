@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Skull, Wifi, WifiOff, MessageSquare, X, Send, Minimize2, Maximize2, Settings, ChevronRight, ChevronDown, MapPin } from 'lucide-react';
+import { Skull, Wifi, WifiOff, MessageSquare, X, Send, Minimize2, Maximize2, Settings, ChevronRight, ChevronDown, MapPin, Star, User } from 'lucide-react';
 import { Country, State } from 'country-state-city';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -347,77 +347,106 @@ export default function Layout({ children, selectedCountry, selectedState, isAdm
           {/* Sidebar - now under navbar, to the left */}
           <aside className={`bg-gray-900 border-r border-green-500 transition-all duration-300 w-80 hidden lg:block`}>
             <div className="h-full overflow-y-auto p-6">
-              {/* Category Sidebar content */}
-              <h2 className="text-xl font-bold text-red-400 mb-6">CATEGORIES</h2>
-              <Link
-                to="/categories"
-                className="block p-3 rounded cursor-pointer transition-colors mb-2 hover:bg-gray-800 text-gray-300"
-              >
-                <div className="font-semibold">All Categories</div>
-                <div className="text-sm text-gray-400">Browse all products</div>
-              </Link>
-              {/* Render categories and subcategories here (as in your existing logic) */}
-              {categories.map(category => {
-                const subs = subcategories.filter(sub => sub.categories?.name === category.name);
-                const isExpanded = expandedCategories.has(category.name);
-                const subcategoryCount = getSubcategoryCount(category.name);
+              {/* Categories Section */}
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-white mb-4">Categories</h2>
+                <Link
+                  to="/categories"
+                  className="block p-3 rounded cursor-pointer transition-colors mb-3 hover:bg-gray-800 text-gray-300 border border-gray-700"
+                >
+                  <div className="font-semibold text-green-400">All Categories</div>
+                  <div className="text-sm text-gray-400">Browse all products</div>
+                </Link>
                 
-                return (
-                  <div key={category.id} className="mb-2">
-                    <div 
-                      className="flex items-center cursor-pointer hover:bg-gray-800 rounded transition-colors"
-                      onClick={() => handleCategoryClick(category.name)}
-                    >
+                {/* Individual Categories */}
+                {categories.map(category => {
+                  const subs = subcategories.filter(sub => sub.categories?.name === category.name);
+                  const isExpanded = expandedCategories.has(category.name);
+                  const subcategoryCount = getSubcategoryCount(category.name);
+                  
+                  return (
+                    <div key={category.id} className="mb-3">
                       <div 
-                        className="mr-2 w-4 flex justify-center p-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleCategory(category.name);
-                        }}
+                        className="flex items-center cursor-pointer hover:bg-gray-800 rounded transition-colors p-2 border border-gray-700"
+                        onClick={() => handleCategoryClick(category.name)}
                       >
-                        {subs.length > 0 && (isExpanded ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />)}
-                      </div>
-                      <div
-                        className="flex-1 p-2 text-gray-300"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>{category.icon || '📦'}</span>
-                          <span>{category.name}</span>
-                          <div className="ml-auto flex items-center gap-2">
-                            <span className="text-xs text-gray-500">{category.count}</span>
-                            {subcategoryCount > 0 && (
-                              <span className="text-xs bg-blue-600 text-white px-1 rounded">
-                                {subcategoryCount}
-                              </span>
-                            )}
+                        <div 
+                          className="mr-3 w-5 h-5 flex justify-center items-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCategory(category.name);
+                          }}
+                        >
+                          {subs.length > 0 && (isExpanded ? <ChevronDown size={16} className="text-green-400" /> : <ChevronRight size={16} className="text-green-400" />)}
+                        </div>
+                        <div className="flex-1 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{category.icon || '📦'}</span>
+                            <span className="font-medium text-white">{category.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-green-400 font-bold">{category.count}</span>
+                            <ChevronRight size={16} className="text-gray-400" />
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Subcategories */}
+                      {isExpanded && subs.length > 0 && (
+                        <div className="ml-8 mt-2 space-y-2">
+                          {subs.map(sub => (
+                            <div
+                              key={sub.id}
+                              onClick={() => handleSubcategoryClick(sub.id, category.name)}
+                              className="text-sm text-gray-400 hover:text-green-400 cursor-pointer p-2 rounded hover:bg-gray-800 transition-colors flex items-center justify-between border border-gray-800"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs">{sub.icon || '📦'}</span>
+                                <span>{sub.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500">
+                                  {getSubcategoryProductCount(sub.id)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {isExpanded && subs.length > 0 && (
-                      <div className="ml-6 mt-1 space-y-1">
-                        {subs.map(sub => (
-                          <div
-                            key={sub.id}
-                            onClick={() => handleSubcategoryClick(sub.id, category.name)}
-                            className="text-sm text-gray-400 hover:text-green-400 cursor-pointer p-2 rounded hover:bg-gray-800 transition-colors flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs">{sub.icon || '📦'}</span>
-                              <span>{sub.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500">
-                                {getSubcategoryProductCount(sub.id)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                  );
+                })}
+              </div>
+
+              {/* Top Vendors Section */}
+              <div className="border-t border-gray-700 pt-6">
+                <h3 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+                  <Star className="w-5 h-5" />
+                  Top Vendors
+                </h3>
+                <div className="space-y-3">
+                  {/* Sample top vendors - you can make this dynamic */}
+                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded border border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
                       </div>
-                    )}
+                      <span className="text-white font-medium">amazon4drugs</span>
+                    </div>
+                    <div className="text-orange-400 font-bold text-sm">100%</div>
                   </div>
-                );
-              })}
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded border border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-white font-medium">addyrus</span>
+                    </div>
+                    <div className="text-orange-400 font-bold text-sm">100%</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </aside>
 

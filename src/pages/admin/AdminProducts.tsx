@@ -83,6 +83,18 @@ export default function AdminProducts() {
     price_gbp: '',
     price_eur: '',
     price_aud: '',
+    price_cad: '',
+    price_jpy: '',
+    price_cny: '',
+    price_inr: '',
+    price_brl: '',
+    price_mxn: '',
+    price_ngn: '',
+    price_ghs: '',
+    price_kes: '',
+    price_zar: '',
+    price_rub: '',
+    price_try: '',
     price_xmr: '',
     category: '',
     subcategory_id: '',
@@ -179,6 +191,18 @@ export default function AdminProducts() {
         price_gbp: newProduct.price_gbp ? parseFloat(newProduct.price_gbp) : null,
         price_eur: newProduct.price_eur ? parseFloat(newProduct.price_eur) : null,
         price_aud: newProduct.price_aud ? parseFloat(newProduct.price_aud) : null,
+        price_cad: newProduct.price_cad ? parseFloat(newProduct.price_cad) : null,
+        price_jpy: newProduct.price_jpy ? parseFloat(newProduct.price_jpy) : null,
+        price_cny: newProduct.price_cny ? parseFloat(newProduct.price_cny) : null,
+        price_inr: newProduct.price_inr ? parseFloat(newProduct.price_inr) : null,
+        price_brl: newProduct.price_brl ? parseFloat(newProduct.price_brl) : null,
+        price_mxn: newProduct.price_mxn ? parseFloat(newProduct.price_mxn) : null,
+        price_ngn: newProduct.price_ngn ? parseFloat(newProduct.price_ngn) : null,
+        price_ghs: newProduct.price_ghs ? parseFloat(newProduct.price_ghs) : null,
+        price_kes: newProduct.price_kes ? parseFloat(newProduct.price_kes) : null,
+        price_zar: newProduct.price_zar ? parseFloat(newProduct.price_zar) : null,
+        price_rub: newProduct.price_rub ? parseFloat(newProduct.price_rub) : null,
+        price_try: newProduct.price_try ? parseFloat(newProduct.price_try) : null,
         price_xmr: newProduct.price_xmr ? parseFloat(newProduct.price_xmr) : null,
         shipping_from_country: newProduct.shipping_from_country || null,
         shipping_to_countries: newProduct.shipping_to_countries && newProduct.shipping_to_countries.length > 0 ? newProduct.shipping_to_countries : [],
@@ -227,12 +251,24 @@ export default function AdminProducts() {
         vendor_id: '',
         title: '',
         description: '',
-        price_btc: '',
-        price_usd: '',
-        price_gbp: '',
-        price_eur: '',
-        price_aud: '',
-        price_xmr: '',
+            price_btc: '',
+    price_usd: '',
+    price_gbp: '',
+    price_eur: '',
+    price_aud: '',
+    price_cad: '',
+    price_jpy: '',
+    price_cny: '',
+    price_inr: '',
+    price_brl: '',
+    price_mxn: '',
+    price_ngn: '',
+    price_ghs: '',
+    price_kes: '',
+    price_zar: '',
+    price_rub: '',
+    price_try: '',
+    price_xmr: '',
         category: '',
         subcategory_id: '',
         image_url: '',
@@ -288,6 +324,18 @@ export default function AdminProducts() {
         price_gbp: editingProduct.price_gbp ? parseFloat(editingProduct.price_gbp) : null,
         price_eur: editingProduct.price_eur ? parseFloat(editingProduct.price_eur) : null,
         price_aud: editingProduct.price_aud ? parseFloat(editingProduct.price_aud) : null,
+        price_cad: editingProduct.price_cad ? parseFloat(editingProduct.price_cad) : null,
+        price_jpy: editingProduct.price_jpy ? parseFloat(editingProduct.price_jpy) : null,
+        price_cny: editingProduct.price_cny ? parseFloat(editingProduct.price_cny) : null,
+        price_inr: editingProduct.price_inr ? parseFloat(editingProduct.price_inr) : null,
+        price_brl: editingProduct.price_brl ? parseFloat(editingProduct.price_brl) : null,
+        price_mxn: editingProduct.price_mxn ? parseFloat(editingProduct.price_mxn) : null,
+        price_ngn: editingProduct.price_ngn ? parseFloat(editingProduct.price_ngn) : null,
+        price_ghs: editingProduct.price_ghs ? parseFloat(editingProduct.price_ghs) : null,
+        price_kes: editingProduct.price_kes ? parseFloat(editingProduct.price_kes) : null,
+        price_zar: editingProduct.price_zar ? parseFloat(editingProduct.price_zar) : null,
+        price_rub: editingProduct.price_rub ? parseFloat(editingProduct.price_rub) : null,
+        price_try: editingProduct.price_try ? parseFloat(editingProduct.price_try) : null,
         price_xmr: editingProduct.price_xmr ? parseFloat(editingProduct.price_xmr) : null,
         category: editingProduct.category,
         subcategory_id: editingProduct.subcategory_id || null,
@@ -780,40 +828,226 @@ export default function AdminProducts() {
               </div>
 
               {/* Pricing Section */}
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Price BTC *</label>
-                  <input
-                    type="number"
-                    step="0.00000001"
-                    value={newProduct.price_btc}
-                    onChange={(e) => setNewProduct({ ...newProduct, price_btc: e.target.value })}
-                    required
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00000000"
-                  />
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">Pricing</h3>
+                
+                {/* Primary Currencies */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price BTC *</label>
+                    <input
+                      type="number"
+                      step="0.00000001"
+                      value={newProduct.price_btc}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_btc: e.target.value })}
+                      required
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00000000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price USD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_usd}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_usd: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price XMR</label>
+                    <input
+                      type="number"
+                      step="0.000000000001"
+                      value={newProduct.price_xmr}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_xmr: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.000000000000"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Price USD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newProduct.price_usd}
-                    onChange={(e) => setNewProduct({ ...newProduct, price_usd: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00"
-                  />
+
+                {/* Additional Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price GBP</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_gbp}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_gbp: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price EUR</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_eur}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_eur: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price CAD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_cad}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_cad: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price AUD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_aud}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_aud: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Price XMR</label>
-                  <input
-                    type="number"
-                    step="0.000000000001"
-                    value={newProduct.price_xmr}
-                    onChange={(e) => setNewProduct({ ...newProduct, price_xmr: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.000000000000"
-                  />
+
+                {/* More Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price JPY</label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={newProduct.price_jpy}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_jpy: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price CNY</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_cny}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_cny: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price INR</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_inr}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_inr: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price BRL</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_brl}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_brl: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Regional Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price MXN</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_mxn}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_mxn: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price NGN</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_ngn}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_ngn: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price GHS</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_ghs}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_ghs: e.target.value })}
+                      className="w-full bg-black border border-gray-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price KES</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_kes}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_kes: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Additional Regional Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price ZAR</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_zar}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_zar: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price RUB</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_rub}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_rub: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price TRY</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price_try}
+                      onChange={(e) => setNewProduct({ ...newProduct, price_try: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1294,39 +1528,226 @@ export default function AdminProducts() {
               </div>
 
               {/* Additional Pricing Currencies */}
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Price GBP</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editingProduct.price_gbp || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, price_gbp: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00"
-                  />
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">Pricing</h3>
+                
+                {/* Primary Currencies */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price BTC *</label>
+                    <input
+                      type="number"
+                      step="0.00000001"
+                      value={editingProduct.price_btc}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_btc: e.target.value })}
+                      required
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00000000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price USD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_usd || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_usd: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price XMR</label>
+                    <input
+                      type="number"
+                      step="0.000000000001"
+                      value={editingProduct.price_xmr || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_xmr: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.000000000000"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Price EUR</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editingProduct.price_eur || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, price_eur: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00"
-                  />
+
+                {/* Additional Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price GBP</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_gbp || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_gbp: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price EUR</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_eur || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_eur: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price CAD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_cad || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_cad: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price AUD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_aud || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_aud: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Price AUD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editingProduct.price_aud || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, price_aud: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                    placeholder="0.00"
-                  />
+
+                {/* More Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price JPY</label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={editingProduct.price_jpy || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_jpy: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price CNY</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_cny || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_cny: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price INR</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_inr || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_inr: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price BRL</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_brl || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_brl: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Regional Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price MXN</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_mxn || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_mxn: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price NGN</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_ngn || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_ngn: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price GHS</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_ghs || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_ghs: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price KES</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_kes || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_kes: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Additional Regional Currencies */}
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price ZAR</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_zar || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_zar: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price RUB</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_rub || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_rub: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Price TRY</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price_try || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price_try: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
               </div>
 
