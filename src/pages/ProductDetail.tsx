@@ -4,6 +4,7 @@ import { Star, ShoppingCart, Shield, Package, MessageSquare, ArrowLeft, Plus, Mi
 import { Country } from 'country-state-city';
 import { supabase } from '../lib/supabase';
 import { showGlobalError, showGlobalSuccess } from '../components/CustomAlert';
+import ChatModal from '../components/ChatModal';
 
 // Function to generate random view count above 500
 const generateRandomViews = () => {
@@ -68,6 +69,7 @@ export default function ProductDetail() {
   const [ordering, setOrdering] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>('');
+  const [showChatModal, setShowChatModal] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -878,7 +880,7 @@ export default function ProductDetail() {
                   )}
 
                   <button
-                    onClick={() => user ? navigate('/admin/secure-chat') : navigate('/login')}
+                    onClick={() => user ? setShowChatModal(true) : navigate('/login')}
                     className="w-full bg-gray-700 hover:bg-gray-600 text-green-400 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
                   >
                     <MessageSquare className="w-6 h-6" />
@@ -906,6 +908,16 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      {/* Chat Modal */}
+      <ChatModal
+        isOpen={showChatModal}
+        onClose={() => setShowChatModal(false)}
+        vendorId={product?.vendor_id || ''}
+        vendorName={vendor?.username || 'Vendor'}
+        productId={product?.id}
+        productTitle={product?.title}
+      />
     </>
   );
 }

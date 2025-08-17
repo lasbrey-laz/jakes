@@ -117,7 +117,7 @@ export default function Home() {
           </div>
           <div>
             <div className="text-green-400 font-bold text-lg">{totalListings}</div>
-            <div className="text-gray-500 text-xs">LISTINGS</div>
+            <div className="text-gray-500 text-xs">Products</div>
           </div>
           <div>
             <div className="text-yellow-400 font-bold text-lg">99.7%</div>
@@ -151,8 +151,8 @@ export default function Home() {
                 <div className="text-center">
                   <div className="text-3xl mb-3">{category.icon || '📦'}</div>
                   <h3 className="font-bold text-green-400 group-hover:text-red-400 mb-2">{category.name}</h3>
-                  <div className="text-yellow-400 font-bold text-lg">{category.count}</div>
-                  <p className="text-gray-500 text-xs mt-2">{category.description}</p>
+                  {/* <div className="text-yellow-400 font-bold text-lg">{category.count}</div>
+                  <p className="text-gray-500 text-xs mt-2">{category.description}</p> */}
                 </div>
               </div>
             ))}
