@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import PasswordReset from './pages/PasswordReset';
 import Categories from './pages/Categories';
 import ProductDetail from './pages/ProductDetail';
 import Vendors from './pages/Vendors';
@@ -222,6 +223,7 @@ function App() {
       
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/password-reset" element={<PasswordReset />} />
         
         {/* Admin Routes - Require Authentication */}
         <Route path="/admin/*" element={

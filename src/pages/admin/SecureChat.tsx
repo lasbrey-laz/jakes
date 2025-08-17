@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MessageSquare, Send, User, Shield, Crown, Clock, AlertCircle, Eye, Package } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MessageSquare, Send, User, Crown, Clock, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { showGlobalError, showGlobalSuccess } from '../../components/CustomAlert';
 
@@ -98,20 +98,20 @@ export default function SecureChat() {
         }
       });
 
-      // Calculate unread counts
-      const unreadCounts = await Promise.all(
-        Array.from(usersMap.values()).map(async (chat) => {
-          const { count } = await supabase
-            .from('chat_messages')
-            .select('*', { count: 'exact' })
-            .eq('sender_id', chat.customerId)
-            .eq('receiver_id', chat.vendorId)
-            .eq('is_read', false);
+      // // Calculate unread counts
+      // const unreadCounts = await Promise.all(
+      //   Array.from(usersMap.values()).map(async (chat) => {
+      //     const { count } = await supabase
+      //       .from('chat_messages')
+      //       .select('*', { count: 'exact' })
+      //       .eq('sender_id', chat.customerId)
+      //       .eq('receiver_id', chat.vendorId)
+      //       .eq('is_read', false);
           
-          chat.unreadCount = count || 0;
-          return chat;
-        })
-      );
+      //     chat.unreadCount = count || 0;
+      //     return chat;
+      //   })
+      // );
 
       setChatUsers(Array.from(usersMap.values()).sort((a, b) => 
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()

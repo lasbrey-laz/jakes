@@ -168,6 +168,17 @@ export default function Login() {
           </button>
         </div>
 
+        {isLogin && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => navigate('/password-reset')}
+              className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+            >
+              Forgot Password?
+            </button>
+          </div>
+        )}
+
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
             All communications are encrypted end-to-end
