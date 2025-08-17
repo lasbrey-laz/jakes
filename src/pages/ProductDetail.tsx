@@ -229,11 +229,11 @@ export default function ProductDetail() {
                 {product.image_urls && product.image_urls.length > 0 ? (
                   <div className="space-y-4">
                     {/* Main Image */}
-                    <div className="relative">
+                    <div className="relative flex justify-center">
                       <img
                         src={product.image_urls[0]}
                         alt={product.title}
-                        className="w-full h-96 object-cover rounded-lg"
+                        className="w-60 h-60 object-cover rounded-lg"
                       />
                     </div>
                     
@@ -258,11 +258,13 @@ export default function ProductDetail() {
                     )}
                   </div>
                 ) : (
-                  <img
-                    src={product.image_url || 'https://via.placeholder.com/600x400?text=No+Image'}
-                    alt={product.title}
-                    className="w-full h-96 object-cover rounded-lg"
-                  />
+                  <div className="flex justify-center">
+                    <img
+                      src={product.image_url || 'https://via.placeholder.com/600x400?text=No+Image'}
+                      alt={product.title}
+                      className="w-60 h-60 object-cover rounded-lg"
+                    />
+                  </div>
                 )}
               </div>
 
