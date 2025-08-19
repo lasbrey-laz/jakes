@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Shield, Clock, Search } from 'lucide-react';
+import { Star, Shield, Clock, Search, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Vendors() {
@@ -7,6 +7,22 @@ export default function Vendors() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('reputation');
   const [loading, setLoading] = useState(true);
+  const [selectedCountry, setSelectedCountry] = useState('all');
+
+  // Use the same countries as the location selector
+  const countries = [
+    { code: 'all', name: 'All Countries', flag: '🌍' },
+    { code: 'US', name: 'United States', flag: '🇺🇸' },
+    { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+    { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+    { code: 'FR', name: 'France', flag: '🇫🇷' },
+    { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+    { code: 'AU', name: 'Australia', flag: '🇦🇺' },
+    { code: 'JP', name: 'Japan', flag: '🇯🇵' },
+    { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+    { code: 'IN', name: 'India', flag: '🇮🇳' },
+    { code: 'MX', name: 'Mexico', flag: '🇲🇽' }
+  ];
 
   useEffect(() => {
     const fetchVendors = async () => {
@@ -37,9 +53,11 @@ export default function Vendors() {
     fetchVendors();
   }, []);
 
-  const filteredVendors = vendors.filter((vendor) =>
-    vendor.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredVendors = vendors.filter((vendor) => {
+    const matchesSearch = vendor.username?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCountry = selectedCountry === 'all' || vendor.country === selectedCountry;
+    return matchesSearch && matchesCountry;
+  });
 
   const sortedVendors = [...filteredVendors].sort((a, b) => {
     switch (sortBy) {
@@ -56,6 +74,11 @@ export default function Vendors() {
     }
   });
 
+  const getVendorCountByCountry = (countryCode: string) => {
+    if (countryCode === 'all') return vendors.length;
+    return vendors.filter(vendor => vendor.country === countryCode).length;
+  };
+
   return (
     <>
       <div className="mb-8">
@@ -64,6 +87,29 @@ export default function Vendors() {
         <p className="text-gray-500 text-sm mt-2">
           <span className="text-yellow-400">Note:</span> Browse vendors freely. Login required only for purchases.
         </p>
+      </div>
+
+      {/* Country Tabs */}
+      <div className="bg-gray-900 border border-green-500 rounded-lg p-4 mb-6">
+        <div className="flex flex-wrap gap-2">
+          {countries.map((country) => (
+            <button
+              key={country.code}
+              onClick={() => setSelectedCountry(country.code)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                selectedCountry === country.code
+                  ? 'bg-green-600 text-white border border-green-500'
+                  : 'bg-gray-800 text-gray-300 border border-gray-600 hover:bg-gray-700 hover:border-green-500'
+              }`}
+            >
+              <span className="text-lg">{country.flag}</span>
+              <span>{country.name}</span>
+              <span className="bg-gray-700 text-gray-300 px-2 py-1 rounded-full text-xs">
+                {getVendorCountByCountry(country.code)}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Filters */}
@@ -97,6 +143,11 @@ export default function Vendors() {
           <div className="text-center">
             <span className="text-green-400 font-bold">{sortedVendors.length}</span>
             <span className="text-gray-400 text-sm ml-1">vendors found</span>
+            {selectedCountry !== 'all' && (
+              <div className="text-xs text-gray-500 mt-1">
+                in {countries.find(c => c.code === selectedCountry)?.name}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -124,6 +175,15 @@ export default function Vendors() {
                     <span className="text-yellow-400 font-bold">{vendor.reputation_score ?? 0}</span>
                     <span className="text-gray-500 text-sm">(reputation)</span>
                   </div>
+                  {/* Country Display */}
+                  {vendor.country && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <MapPin className="w-3 h-3 text-gray-500" />
+                      <span className="text-gray-500 text-xs">
+                        {countries.find(c => c.code === vendor.country)?.name || vendor.country}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -167,13 +227,21 @@ export default function Vendors() {
 
       {!loading && sortedVendors.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-400 text-lg">No vendors found matching your search</p>
-          <button
-            onClick={() => setSearchTerm('')}
-            className="mt-4 text-red-400 hover:text-red-300 font-bold"
-          >
-            Clear Search
-          </button>
+          <p className="text-gray-400 text-lg">No vendors found matching your criteria</p>
+          <div className="mt-4 space-y-2">
+            <button
+              onClick={() => setSearchTerm('')}
+              className="text-red-400 hover:text-red-300 font-bold mr-4"
+            >
+              Clear Search
+            </button>
+            <button
+              onClick={() => setSelectedCountry('all')}
+              className="text-green-400 hover:text-green-300 font-bold"
+            >
+              Show All Countries
+            </button>
+          </div>
         </div>
       )}
     </>

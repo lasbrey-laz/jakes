@@ -14,6 +14,23 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  // Country helper functions
+  const getCountryFlag = (countryCode: string) => {
+    const flags: { [key: string]: string } = {
+      'US': '🇺🇸', 'CA': '🇨🇦', 'GB': '🇬🇧', 'FR': '🇫🇷', 'DE': '🇩🇪',
+      'AU': '🇦🇺', 'JP': '🇯🇵', 'BR': '🇧🇷', 'IN': '🇮🇳', 'MX': '🇲🇽'
+    };
+    return flags[countryCode] || '🌍';
+  };
+
+  const getCountryName = (countryCode: string) => {
+    const names: { [key: string]: string } = {
+      'US': 'United States', 'CA': 'Canada', 'GB': 'United Kingdom', 'FR': 'France', 'DE': 'Germany',
+      'AU': 'Australia', 'JP': 'Japan', 'BR': 'Brazil', 'IN': 'India', 'MX': 'Mexico'
+    };
+    return names[countryCode] || countryCode;
+  };
+
   useEffect(() => {
     fetchUsers();
     checkCurrentUser();
@@ -491,6 +508,18 @@ export default function AdminUsers() {
                       <span className="text-gray-400 text-sm">Join Date:</span>
                       <p className="text-white">{new Date(selectedUser.created_at).toLocaleString()}</p>
                     </div>
+                    <div>
+                      <span className="text-gray-400 text-sm">Country:</span>
+                      <p className="text-white">
+                        {selectedUser.country ? (
+                          <span className="flex items-center gap-2">
+                            {getCountryFlag(selectedUser.country)} {getCountryName(selectedUser.country)}
+                          </span>
+                        ) : (
+                          'Not specified'
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
                 
@@ -604,6 +633,27 @@ export default function AdminUsers() {
                   onChange={(e) => setEditingUser({...editingUser, reputation_score: parseFloat(e.target.value)})}
                   className="w-full bg-black border border-gray-600 text-white px-3 py-2 rounded focus:border-green-500 focus:outline-none"
                 />
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Country</label>
+                <select
+                  value={editingUser.country || ''}
+                  onChange={(e) => setEditingUser({...editingUser, country: e.target.value})}
+                  className="w-full bg-black border border-gray-600 text-white px-3 py-2 rounded focus:border-green-500 focus:outline-none"
+                >
+                  <option value="">Select Country</option>
+                  <option value="US">🇺🇸 United States</option>
+                  <option value="CA">🇨🇦 Canada</option>
+                  <option value="GB">🇬🇧 United Kingdom</option>
+                  <option value="FR">🇫🇷 France</option>
+                  <option value="DE">🇩🇪 Germany</option>
+                  <option value="AU">🇦🇺 Australia</option>
+                  <option value="JP">🇯🇵 Japan</option>
+                  <option value="BR">🇧🇷 Brazil</option>
+                  <option value="IN">🇮🇳 India</option>
+                  <option value="MX">🇲🇽 Mexico</option>
+                </select>
               </div>
               
               <div className="pt-4 border-t border-gray-700">
