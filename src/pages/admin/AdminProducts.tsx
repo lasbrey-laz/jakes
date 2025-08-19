@@ -27,6 +27,10 @@ export default function AdminProducts() {
     xmr: ''
   });
   
+  // User authentication state
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  
   // Country selection state
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [countrySearchTerm, setCountrySearchTerm] = useState('');
@@ -34,6 +38,23 @@ export default function AdminProducts() {
   // Shipping to countries selection state
   const [showShippingToCountriesModal, setShowShippingToCountriesModal] = useState(false);
   const [shippingToCountriesSearchTerm, setShippingToCountriesSearchTerm] = useState('');
+
+  // Country helper functions
+  const getCountryFlag = (countryCode: string) => {
+    const flags: { [key: string]: string } = {
+      'US': '🇺🇸', 'CA': '🇨🇦', 'GB': '🇬🇧', 'FR': '🇫🇷', 'DE': '🇩🇪',
+      'AU': '🇦🇺', 'JP': '🇯🇵', 'BR': '🇧🇷', 'IN': '🇮🇳', 'MX': '🇲🇽'
+    };
+    return flags[countryCode] || '🌍';
+  };
+
+  const getCountryName = (countryCode: string) => {
+    const names: { [key: string]: string } = {
+      'US': 'United States', 'CA': 'Canada', 'GB': 'United Kingdom', 'FR': 'France', 'DE': 'Germany',
+      'AU': 'Australia', 'JP': 'Japan', 'BR': 'Brazil', 'IN': 'India', 'MX': 'Mexico'
+    };
+    return names[countryCode] || countryCode;
+  };
   
   // Predefined shipping methods
   const predefinedShippingMethods = [
@@ -76,6 +97,7 @@ export default function AdminProducts() {
   ];
   const [newProduct, setNewProduct] = useState({
     vendor_id: '',
+    vendor_country_filter: '',
     title: '',
     description: '',
     price_btc: '',
@@ -124,6 +146,43 @@ export default function AdminProducts() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (vendors.length > 0) {
+      checkCurrentUser();
+    }
+  }, [vendors]);
+
+  const checkCurrentUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUser(user);
+        
+        // Get user profile to check if they're a vendor and get their country
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (!error && profile) {
+          setUserProfile(profile);
+          
+          // If user is a vendor, auto-select them in the vendor dropdown
+          if (profile.is_vendor && profile.country) {
+            // Find vendor by user ID and set as selected
+            const vendorVendor = vendors.find(v => v.id === user.id);
+            if (vendorVendor) {
+              setNewProduct(prev => ({ ...prev, vendor_id: user.id }));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking current user:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -790,6 +849,28 @@ export default function AdminProducts() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-green-400 text-sm mb-2">Vendor *</label>
+                  
+                  {/* Country Filter */}
+                  <div className="mb-2">
+                    <select
+                      value={newProduct.vendor_country_filter || ''}
+                      onChange={(e) => setNewProduct({ ...newProduct, vendor_country_filter: e.target.value, vendor_id: '' })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-2 rounded focus:border-green-500 focus:outline-none text-sm"
+                    >
+                      <option value="">All Countries</option>
+                      <option value="US">🇺🇸 United States</option>
+                      <option value="CA">🇨🇦 Canada</option>
+                      <option value="GB">🇬🇧 United Kingdom</option>
+                      <option value="FR">🇫🇷 France</option>
+                      <option value="DE">🇩🇪 Germany</option>
+                      <option value="AU">🇦🇺 Australia</option>
+                      <option value="JP">🇯🇵 Japan</option>
+                      <option value="BR">🇧🇷 Brazil</option>
+                      <option value="IN">🇮🇳 India</option>
+                      <option value="MX">🇲🇽 Mexico</option>
+                    </select>
+                  </div>
+                  
                   <select
                     value={newProduct.vendor_id}
                     onChange={(e) => setNewProduct({ ...newProduct, vendor_id: e.target.value })}
@@ -797,10 +878,21 @@ export default function AdminProducts() {
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                   >
                     <option value="">Select vendor...</option>
-                    {vendors.map(vendor => (
-                      <option key={vendor.id} value={vendor.id}>{vendor.username}</option>
-                    ))}
+                    {vendors
+                      .filter(vendor => !newProduct.vendor_country_filter || vendor.country === newProduct.vendor_country_filter)
+                      .map(vendor => (
+                        <option key={vendor.id} value={vendor.id}>
+                          {vendor.username}
+                          {vendor.country && ` (${getCountryFlag(vendor.country)} ${getCountryName(vendor.country)})`}
+                          {vendor.id === currentUser?.id && ' (You)'}
+                        </option>
+                      ))}
                   </select>
+                  {userProfile?.is_vendor && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Auto-selected: {userProfile.username} from {getCountryFlag(userProfile.country)} {getCountryName(userProfile.country)}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-green-400 text-sm mb-2">Title *</label>
@@ -1460,7 +1552,11 @@ export default function AdminProducts() {
                   >
                     <option value="">Select vendor...</option>
                     {vendors.map(vendor => (
-                      <option key={vendor.id} value={vendor.id}>{vendor.username}</option>
+                      <option key={vendor.id} value={vendor.id}>
+                        {vendor.username}
+                        {vendor.country && ` (${getCountryFlag(vendor.country)} ${getCountryName(vendor.country)})`}
+                        {vendor.id === currentUser?.id && ' (You)'}
+                      </option>
                     ))}
                   </select>
                 </div>
