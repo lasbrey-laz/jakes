@@ -19,7 +19,8 @@ export default function AdminVendors() {
     password: '',
     username: '',
     vendor_type: 'escrow',
-    is_verified: false
+    is_verified: false,
+    country: ''
   });
 
   useEffect(() => {
@@ -93,29 +94,30 @@ export default function AdminVendors() {
 
       if (authError) throw authError;
 
-      // Create profile using admin client to bypass RLS
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert([{
-          id: authData.user.id,
-          username: newVendor.username,
-          email: newVendor.email,
-          is_vendor: true,
-          is_admin: false,
-          vendor_status: 'approved',
-          vendor_type: newVendor.vendor_type,
-          is_verified: newVendor.is_verified,
-          is_active: true,
-          reputation_score: 0.0,
-          total_sales: 0,
-          disputes_won: 0,
-          disputes_lost: 0,
-          open_orders: 0
-        }]);
+              // Create profile using admin client to bypass RLS
+        const { error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .insert([{
+            id: authData.user.id,
+            username: newVendor.username,
+            email: newVendor.email,
+            is_vendor: true,
+            is_admin: false,
+            vendor_status: 'approved',
+            vendor_type: newVendor.vendor_type,
+            is_verified: newVendor.is_verified,
+            country: newVendor.country || null,
+            is_active: true,
+            reputation_score: 0.0,
+            total_sales: 0,
+            disputes_won: 0,
+            disputes_lost: 0,
+            open_orders: 0
+          }]);
 
       if (profileError) throw profileError;
 
-      setNewVendor({ email: '', password: '', username: '', vendor_type: 'escrow', is_verified: false });
+      setNewVendor({ email: '', password: '', username: '', vendor_type: 'escrow', is_verified: false, country: '' });
       setShowCreateModal(false);
       fetchVendors();
       showSuccess('Vendor created successfully!');
@@ -152,8 +154,19 @@ export default function AdminVendors() {
         });
         continue;
       }
+      
+      // Validate country code if provided
+      const validCountries = ['US', 'CA', 'GB', 'FR', 'DE', 'AU', 'JP', 'BR', 'IN', 'MX'];
+      if (parts[5] && !validCountries.includes(parts[5])) {
+        results.push({
+          email: parts[0] || 'Unknown',
+          status: 'error',
+          message: `Invalid country code: ${parts[5]}. Valid codes: ${validCountries.join(', ')}`
+        });
+        continue;
+      }
 
-      const [email, username, password, vendorType = 'escrow', isVerifiedStr = 'false'] = parts;
+      const [email, username, password, vendorType = 'escrow', isVerifiedStr = 'false', country = ''] = parts;
       const isVerified = isVerifiedStr.toLowerCase() === 'true';
 
       try {
@@ -178,6 +191,7 @@ export default function AdminVendors() {
             vendor_status: 'approved',
             vendor_type: vendorType,
             is_verified: isVerified,
+            country: country || null,
             is_active: true,
             reputation_score: 0.0,
             total_sales: 0,
@@ -468,6 +482,27 @@ export default function AdminVendors() {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-green-400 text-sm mb-2">Country</label>
+                <select
+                  value={newVendor.country}
+                  onChange={(e) => setNewVendor({ ...newVendor, country: e.target.value })}
+                  className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                >
+                  <option value="">Select Country</option>
+                  <option value="US">🇺🇸 United States</option>
+                  <option value="CA">🇨🇦 Canada</option>
+                  <option value="GB">🇬🇧 United Kingdom</option>
+                  <option value="FR">🇫🇷 France</option>
+                  <option value="DE">🇩🇪 Germany</option>
+                  <option value="AU">🇦🇺 Australia</option>
+                  <option value="JP">🇯🇵 Japan</option>
+                  <option value="BR">🇧🇷 Brazil</option>
+                  <option value="IN">🇮🇳 India</option>
+                  <option value="MX">🇲🇽 Mexico</option>
+                </select>
+              </div>
+
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -493,7 +528,7 @@ export default function AdminVendors() {
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
-                    setNewVendor({ email: '', password: '', username: '', vendor_type: 'escrow', is_verified: false });
+                    setNewVendor({ email: '', password: '', username: '', vendor_type: 'escrow', is_verified: false, country: '' });
                   }}
                   className="bg-gray-700 hover:bg-gray-600 text-green-400 px-6 py-3 rounded font-bold transition-colors"
                 >
@@ -519,19 +554,20 @@ export default function AdminVendors() {
           Enter one vendor per line in CSV format:
         </p>
         <code className="text-green-400 text-sm block bg-black p-2 rounded">
-          email,username,password,vendor_type,is_verified
+          email,username,password,vendor_type,is_verified,country
         </code>
         <p className="text-gray-400 text-xs mt-2">
           • vendor_type: escrow, finalize_early, or direct_pay (default: escrow)<br/>
-          • is_verified: true or false (default: false)
+          • is_verified: true or false (default: false)<br/>
+          • country: US, CA, GB, FR, DE, AU, JP, BR, IN, MX (optional)
         </p>
-        <div className="mt-2">
-          <p className="text-gray-400 text-xs font-semibold">Example:</p>
-          <code className="text-green-400 text-xs block bg-black p-2 rounded mt-1">
-            vendor1@example.com,CryptoVendor1,SecurePass123,escrow,true<br/>
-            vendor2@example.com,DigitalSeller,MyPassword456,finalize_early,false
-          </code>
-        </div>
+                  <div className="mt-2">
+            <p className="text-gray-400 text-xs font-semibold">Example:</p>
+            <code className="text-green-400 text-xs block bg-black p-2 rounded mt-1">
+              vendor1@example.com,CryptoVendor1,SecurePass123,escrow,true,US<br/>
+              vendor2@example.com,DigitalSeller,MyPassword456,finalize_early,false,CA
+            </code>
+          </div>
       </div>
 
       {/* Form starts here */}
@@ -546,7 +582,7 @@ export default function AdminVendors() {
             required
             rows={10}
             className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none font-mono text-sm"
-            placeholder="vendor1@example.com,CryptoVendor1,SecurePass123,escrow,true&#10;vendor2@example.com,DigitalSeller,MyPassword456,finalize_early,false"
+            placeholder="vendor1@example.com,CryptoVendor1,SecurePass123,escrow,true,US&#10;vendor2@example.com,DigitalSeller,MyPassword456,finalize_early,false,CA"
           />
         </div>
 
