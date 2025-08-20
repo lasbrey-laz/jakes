@@ -243,8 +243,9 @@ export default function AdminProducts() {
 
     setCreating(true);
     try {
+      const { vendor_country_filter, ...productDataWithoutFilter } = newProduct;
       const productData = {
-        ...newProduct,
+        ...productDataWithoutFilter,
         price_btc: parseFloat(newProduct.price_btc),
         price_usd: newProduct.price_usd ? parseFloat(newProduct.price_usd) : null,
         price_gbp: newProduct.price_gbp ? parseFloat(newProduct.price_gbp) : null,
@@ -308,6 +309,7 @@ export default function AdminProducts() {
       // Reset form
       setNewProduct({
         vendor_id: '',
+        vendor_country_filter: '',
         title: '',
         description: '',
             price_btc: '',
