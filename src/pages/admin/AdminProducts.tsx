@@ -184,6 +184,67 @@ export default function AdminProducts() {
     }
   };
 
+  // Price validation function based on database schema constraints
+  const validatePrices = (product: any) => {
+    // USD fields: numeric(10, 2) - max 99,999,999.99
+    const maxUsd = 99999999.99;
+    
+    // GBP/EUR/AUD fields: numeric(12, 2) - max 9,999,999,999.99
+    const maxGbpEurAud = 9999999999.99;
+    
+    // BTC fields: numeric(16, 8) - max 99,999,999.99999999
+    const maxBtc = 99999999.99999999;
+    
+    // XMR fields: numeric(16, 12) - max 99,999,999.999999999999
+    const maxXmr = 99999999.999999999999;
+
+    if (product.price_usd && parseFloat(product.price_usd) > maxUsd) {
+      return { error: `USD price cannot exceed $${maxUsd.toLocaleString()}` };
+    }
+    
+    if (product.price_gbp && parseFloat(product.price_gbp) > maxGbpEurAud) {
+      return { error: `GBP price cannot exceed £${maxGbpEurAud.toLocaleString()}` };
+    }
+    
+    if (product.price_eur && parseFloat(product.price_eur) > maxGbpEurAud) {
+      return { error: `EUR price cannot exceed €${maxGbpEurAud.toLocaleString()}` };
+    }
+    
+    if (product.price_aud && parseFloat(product.price_aud) > maxGbpEurAud) {
+      return { error: `AUD price cannot exceed A$${maxGbpEurAud.toLocaleString()}` };
+    }
+    
+    if (product.price_btc && parseFloat(product.price_btc) > maxBtc) {
+      return { error: `BTC price cannot exceed ${maxBtc.toLocaleString()} BTC` };
+    }
+    
+    if (product.price_xmr && parseFloat(product.price_xmr) > maxXmr) {
+      return { error: `XMR price cannot exceed ${maxXmr.toLocaleString()} XMR` };
+    }
+    
+    if (product.shipping_cost_usd && parseFloat(product.shipping_cost_usd) > maxUsd) {
+      return { error: `USD shipping cost cannot exceed $${maxUsd.toLocaleString()}` };
+    }
+    
+    if (product.shipping_cost_btc && parseFloat(product.shipping_cost_btc) > maxBtc) {
+      return { error: `BTC shipping cost cannot exceed ${maxBtc.toLocaleString()} BTC` };
+    }
+    
+    if (product.shipping_cost_xmr && parseFloat(product.shipping_cost_xmr) > maxXmr) {
+      return { error: `XMR shipping cost cannot exceed ${maxXmr.toLocaleString()} XMR` };
+    }
+    
+    if (product.minimum_order_amount_usd && parseFloat(product.minimum_order_amount_usd) > maxUsd) {
+      return { error: `USD minimum order amount cannot exceed $${maxUsd.toLocaleString()}` };
+    }
+    
+    if (product.minimum_order_amount_xmr && parseFloat(product.minimum_order_amount_xmr) > maxXmr) {
+      return { error: `XMR minimum order amount cannot exceed ${maxXmr.toLocaleString()} XMR` };
+    }
+
+    return { error: null };
+  };
+
   const fetchData = async () => {
     try {
       // Fetch products
@@ -238,6 +299,13 @@ export default function AdminProducts() {
     e.preventDefault();
     if (!newProduct.vendor_id || !newProduct.title || !newProduct.description || !newProduct.price_btc || !newProduct.category) {
       showGlobalError('Please fill in all required fields');
+      return;
+    }
+
+    // Validate price limits based on database schema constraints
+    const priceValidation = validatePrices(newProduct);
+    if (priceValidation.error) {
+      showGlobalError(priceValidation.error);
       return;
     }
 
@@ -371,6 +439,13 @@ export default function AdminProducts() {
 
     if (!editingProduct.vendor_id || !editingProduct.title || !editingProduct.description || !editingProduct.price_btc || !editingProduct.category) {
       showGlobalError('Please fill in all required fields');
+      return;
+    }
+
+    // Validate price limits based on database schema constraints
+    const priceValidation = validatePrices(editingProduct);
+    if (priceValidation.error) {
+      showGlobalError(priceValidation.error);
       return;
     }
 
@@ -948,7 +1023,9 @@ export default function AdminProducts() {
                       onChange={(e) => setNewProduct({ ...newProduct, price_usd: e.target.value })}
                       className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                       placeholder="0.00"
+                      max="99999999.99"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Max: $99,999,999.99</p>
                   </div>
                   <div>
                     <label className="block text-green-400 text-sm mb-2">Price XMR</label>
