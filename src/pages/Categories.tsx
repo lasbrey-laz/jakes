@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Star, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, Filter, Grid, List, Star, ChevronRight, ChevronDown, Tag } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Breadcrumbs, { BreadcrumbItem } from '../components/Breadcrumbs';
 
 export default function Categories() {
   const navigate = useNavigate();
@@ -146,11 +147,25 @@ export default function Categories() {
       <div className="flex-1 p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-red-400 mb-4">CATEGORIES</h1>
-          <p className="text-gray-400">Browse our secure marketplace categories</p>
-          <p className="text-gray-500 text-sm mt-2">
-            <span className="text-yellow-400">Note:</span> Login is optional for browsing. Create an account to make purchases.
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-red-400 mb-4">CATEGORIES</h1>
+              <p className="text-gray-400">Browse our secure marketplace categories</p>
+              <p className="text-gray-500 text-sm mt-2">
+                <span className="text-yellow-400">Note:</span> Login is optional for browsing. Create an account to make purchases.
+              </p>
+            </div>
+            
+            {/* Breadcrumbs */}
+            <div className="flex-shrink-0">
+              <Breadcrumbs
+                items={[
+                  { label: 'Categories', icon: Tag }
+                ]}
+                className="text-xs"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Filters */}

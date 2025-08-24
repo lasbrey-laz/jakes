@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Ghost, Shield, Star } from 'lucide-react';
+import { Ghost, Shield, Star, Home as HomeIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Breadcrumbs, { BreadcrumbItem } from '../components/Breadcrumbs';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -110,55 +111,38 @@ export default function Home() {
     <>
       {/* Stats Bar */}
       <div className="bg-gray-900 border border-green-500 rounded-lg p-4 mb-8">
-        <div className="grid grid-cols-4 gap-4 text-center">
-          <div>
-            <div className="text-red-400 font-bold text-lg">{totalVendors}</div>
-            <div className="text-gray-500 text-xs">ACTIVE VENDORS</div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="grid grid-cols-4 gap-4 text-center flex-1">
+            <div>
+              <div className="text-red-400 font-bold text-lg">{totalVendors}</div>
+              <div className="text-gray-500 text-xs">ACTIVE VENDORS</div>
+            </div>
+            <div>
+              <div className="text-green-400 font-bold text-lg">{totalListings}</div>
+              <div className="text-gray-500 text-xs">Products</div>
+            </div>
+            <div>
+              <div className="text-yellow-400 font-bold text-lg">99.7%</div>
+              <div className="text-gray-500 text-xs">UPTIME</div>
+            </div>
+            <div>
+              <div className="text-blue-400 font-bold text-lg">24/7</div>
+              <div className="text-gray-500 text-xs">SUPPORT</div>
+            </div>
           </div>
-          <div>
-            <div className="text-green-400 font-bold text-lg">{totalListings}</div>
-            <div className="text-gray-500 text-xs">Products</div>
-          </div>
-          <div>
-            <div className="text-yellow-400 font-bold text-lg">99.7%</div>
-            <div className="text-gray-500 text-xs">UPTIME</div>
-          </div>
-          <div>
-            <div className="text-blue-400 font-bold text-lg">24/7</div>
-            <div className="text-gray-500 text-xs">SUPPORT</div>
+          
+          {/* Breadcrumbs */}
+          <div className="flex-shrink-0">
+            <Breadcrumbs
+              items={[
+                { label: 'Home', icon: HomeIcon }
+              ]}
+              className="text-xs"
+            />
           </div>
         </div>
       </div>
 
-      {/* Categories Grid */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold text-red-400 mb-6 flex items-center gap-2">
-          <Ghost className="w-6 h-6" />
-          CATEGORIES
-        </h2>
-        {categories.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-400">No categories available</p>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                onClick={() => handleCategoryClick(category.name)}
-                className="bg-gray-900 border border-gray-700 hover:border-red-500 p-6 rounded-lg cursor-pointer transition-all hover:bg-gray-800 group"
-              >
-                <div className="text-center">
-                  {/* <div className="text-3xl mb-3">{category.icon || '📦'}</div> */}
-                  <h3 className="font-extrabold text-green-400 group-hover:text-red-400 mb-2">{category.name}</h3>
-                  {/* <div className="text-yellow-400 font-bold text-lg">{category.count}</div>
-                  <p className="text-gray-500 text-xs mt-2">{category.description}</p> */}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Featured Products */}
       <div className="mb-12">

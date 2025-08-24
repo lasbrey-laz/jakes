@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2, RotateCcw, Eye, Package, Users, BarChart3, Settings, Crown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { showGlobalError, showGlobalSuccess } from '../../components/CustomAlert';
+import Breadcrumbs, { BreadcrumbItem } from '../../components/Breadcrumbs';
 
 interface DeletedProduct {
   id: string;
@@ -235,6 +236,17 @@ export default function SuperAdmin() {
             Super Admin Dashboard
           </h1>
           <p className="text-gray-400">System overview and deleted products management</p>
+        </div>
+        
+        {/* Breadcrumbs */}
+        <div className="flex-shrink-0">
+          <Breadcrumbs
+            items={[
+              { label: 'Admin', path: '/admin', icon: Settings },
+              { label: 'Super Admin', icon: Crown }
+            ]}
+            className="text-xs"
+          />
         </div>
       </div>
 

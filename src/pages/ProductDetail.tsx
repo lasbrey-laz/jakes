@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, ShoppingCart, Shield, Package, MessageSquare, ArrowLeft, Plus, Minus, LogIn, Eye, Info, Truck, User, FileText } from 'lucide-react';
+import { Star, ShoppingCart, Shield, Package, MessageSquare, ArrowLeft, Plus, Minus, LogIn, Eye, Info, Truck, User, FileText, Tag } from 'lucide-react';
 import { Country } from 'country-state-city';
 import { supabase } from '../lib/supabase';
 import { showGlobalError, showGlobalSuccess } from '../components/CustomAlert';
 import ChatModal from '../components/ChatModal';
+import Breadcrumbs, { BreadcrumbItem } from '../components/Breadcrumbs';
 
 // Function to generate random view count above 500
 const generateRandomViews = () => {
@@ -220,10 +221,17 @@ export default function ProductDetail() {
                 Back
               </button>
 
-                              {/* Breadcrumbs */}
-                <div className="text-orange-400 text-sm">
-                  {product?.category}
-                </div>
+              {/* Breadcrumbs */}
+              <div className="flex-shrink-0">
+                <Breadcrumbs
+                  items={[
+                    { label: 'Categories', path: '/categories' },
+                    { label: product?.category || 'Category', path: `/categories?category=${encodeURIComponent(product?.category || '')}` },
+                    { label: product?.title || 'Product', icon: Package }
+                  ]}
+                  className="text-xs"
+                />
+              </div>
             </div>
           </div>
         </div>

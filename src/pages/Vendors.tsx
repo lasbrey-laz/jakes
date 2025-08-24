@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Shield, Clock, Search, MapPin } from 'lucide-react';
+import { Star, Shield, Clock, Search, MapPin, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Breadcrumbs, { BreadcrumbItem } from '../components/Breadcrumbs';
 
 export default function Vendors() {
   const navigate = useNavigate();
@@ -84,11 +85,25 @@ export default function Vendors() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-red-400 mb-4">VENDORS</h1>
-        <p className="text-gray-400">Verified sellers in our secure marketplace</p>
-        <p className="text-gray-500 text-sm mt-2">
-          <span className="text-yellow-400">Note:</span> Browse vendors freely. Login required only for purchases.
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-red-400 mb-4">VENDORS</h1>
+            <p className="text-gray-400">Verified sellers in our secure marketplace</p>
+            <p className="text-gray-500 text-sm mt-2">
+              <span className="text-yellow-400">Note:</span> Browse vendors freely. Login required only for purchases.
+            </p>
+          </div>
+          
+          {/* Breadcrumbs */}
+          <div className="flex-shrink-0">
+            <Breadcrumbs
+              items={[
+                { label: 'Vendors', icon: Users }
+              ]}
+              className="text-xs"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Country Tabs */}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Shield, MapPin, Package, ArrowLeft, Search, Filter } from 'lucide-react';
+import { Star, Shield, MapPin, Package, ArrowLeft, Search, Filter, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import Breadcrumbs, { BreadcrumbItem } from '../components/Breadcrumbs';
 
 export default function VendorProducts() {
   const { id } = useParams<{ id: string }>();
@@ -111,16 +112,29 @@ export default function VendorProducts() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/vendors')}
-          className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-3xl font-bold text-red-400">{vendor.username}'s Store</h1>
-          <p className="text-gray-400">Browse products from this verified vendor</p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/vendors')}
+            className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-red-400">{vendor.username}'s Store</h1>
+            <p className="text-gray-400">Browse products from this verified vendor</p>
+          </div>
+        </div>
+        
+        {/* Breadcrumbs */}
+        <div className="flex-shrink-0">
+          <Breadcrumbs
+            items={[
+              { label: 'Vendors', path: '/vendors', icon: Users },
+              { label: vendor.username || 'Vendor', icon: Package }
+            ]}
+            className="text-xs"
+          />
         </div>
       </div>
 

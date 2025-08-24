@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Edit, Trash2, Search, Eye, Star, Upload, X, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Search, Eye, Star, Upload, X, Image as ImageIcon, RefreshCw, Settings } from 'lucide-react';
 import { Country } from 'country-state-city';
 import { supabase, supabaseAdmin } from '../../lib/supabase';
 import { showGlobalError, showGlobalSuccess } from '../../components/CustomAlert';
 import cryptoConverter from '../../lib/cryptoConverter';
+import Breadcrumbs, { BreadcrumbItem } from '../../components/Breadcrumbs';
 
 
 
@@ -831,13 +832,26 @@ export default function AdminProducts() {
           </h1>
           <p className="text-gray-400">Manage marketplace products and listings</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </button>
+        <div className="flex items-center gap-4">
+          {/* Breadcrumbs */}
+          <div className="flex-shrink-0">
+            <Breadcrumbs
+              items={[
+                { label: 'Admin', path: '/admin', icon: Settings },
+                { label: 'Products', icon: Package }
+              ]}
+              className="text-xs"
+            />
+          </div>
+          
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

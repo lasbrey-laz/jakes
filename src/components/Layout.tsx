@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Skull, Wifi, WifiOff, MessageSquare, X, Send, Minimize2, Maximize2, Settings, ChevronRight, ChevronDown, MapPin, Star, User } from 'lucide-react';
+import { Skull, Wifi, WifiOff, MessageSquare, X, Send, Minimize2, Maximize2, Settings, ChevronRight, ChevronDown, MapPin, Star, User, Play } from 'lucide-react';
 import { Country, State } from 'country-state-city';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -20,7 +20,7 @@ export default function Layout({ children, selectedCountry, selectedState, isAdm
   ]);
   const [newMessage, setNewMessage] = useState('');
   const [products, setProducts] = useState<any[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -156,7 +156,8 @@ export default function Layout({ children, selectedCountry, selectedState, isAdm
 
 
   const handleCategoryClick = (categoryName: string) => {
-    navigate(`/categories?category=${encodeURIComponent(categoryName)}`);
+    // Only toggle expansion, don't navigate
+    toggleCategory(categoryName);
   };
 
   const handleSubcategoryClick = (subcategoryId: string, categoryName: string) => {
@@ -213,7 +214,7 @@ export default function Layout({ children, selectedCountry, selectedState, isAdm
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono flex flex-col">
       {/* Main Content Wrapper */}
-      <div className={`flex-1 transition-all duration-300`}>
+      <div className={`flex-1 transition-all duration-300 flex flex-col`}>
 
         {/* Header */}
         <header className="bg-gray-900 border-b border-green-500 sticky top-0 z-40">
@@ -286,6 +287,35 @@ export default function Layout({ children, selectedCountry, selectedState, isAdm
           </div>
         </header>
 
+        {/* Security Panel */}
+        <div className="bg-gradient-to-r from-red-900/20 via-red-800/30 to-red-900/20 border-y border-red-500/50 py-2">
+          <div className="container mx-auto px-6">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 font-mono font-bold">SECURE CONNECTION</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-blue-400 font-mono">ENCRYPTED CHANNEL</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                  <span className="text-yellow-400 font-mono">TOR NETWORK</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                  <span className="text-purple-400 font-mono">BLOCKCHAIN VERIFIED</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Navigation */}
         <nav className="bg-gray-800 border-b border-gray-700 sticky">
           <div className="container mx-auto px-6 py-3">
@@ -343,69 +373,81 @@ export default function Layout({ children, selectedCountry, selectedState, isAdm
         </nav>
 
         {/* Main Section Below Navbar */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 min-h-0">
+
           {/* Sidebar - now under navbar, to the left */}
-          <aside className={`bg-gray-900 border-r border-green-500 transition-all duration-300 w-80 hidden lg:block`}>
-            <div className="h-full overflow-y-auto p-6">
-              {/* Categories Section */}
-              <div className="mb-8">
-                <h2 className="text-xl font-bold text-white mb-4">Categories</h2>
-                <Link
-                  to="/categories"
-                  className="block p-3 rounded cursor-pointer transition-colors mb-3 hover:bg-gray-800 text-gray-300 border border-gray-700"
-                >
-                  <div className="font-semibold text-green-400">All Categories</div>
-                  <div className="text-sm text-gray-400">Browse all products</div>
-                </Link>
-                
-                {/* Individual Categories */}
-                {categories.map(category => {
+          <aside className={`bg-gradient-to-b from-gray-900 via-gray-800 to-black border-r-4 border-red-500 transition-all duration-300 w-80 hidden lg:block shadow-2xl flex flex-col h-screen`}>
+            <div className="flex-shrink-0 p-6 text-center">
+              <h1 className="text-xl font-black text-red-400 tracking-wider">CATEGORIES</h1>
+            </div>
+            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-gray-900/90 to-black/90 sidebar-scrollbar" style={{ height: 'calc(100vh - 200px)' }}>
+
+              {/* Individual Categories */}
+              <div className="space-y-0">
+                {categories.map((category, index) => {
                   const subs = subcategories.filter(sub => sub.categories?.name === category.name);
                   const isExpanded = expandedCategories.has(category.name);
                   const subcategoryCount = getSubcategoryCount(category.name);
-                  
+                  const isEven = index % 2 === 0;
+
                   return (
-                    <div key={category.id} className="mb-3">
-                      <div 
-                        className="flex items-center cursor-pointer hover:bg-gray-800 rounded transition-colors p-2 border border-gray-700"
+                    <div key={category.id} className="group">
+                      {/* Category Header */}
+                      <div
+                        className={`flex items-center cursor-pointer transition-all duration-300 p-4 w-full ${isEven
+                          ? 'bg-gray-800 hover:bg-gray-700'
+                          : 'bg-red-900/30 hover:bg-red-800/40'
+                          }`}
                         onClick={() => handleCategoryClick(category.name)}
                       >
-                        <div 
-                          className="mr-3 w-5 h-5 flex justify-center items-center"
+
+
+                        {/* Category Content */}
+                        <div className="flex-1 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl filter drop-shadow-lg">{category.icon || '💊'}</span>
+                            <span className="font-black text-white tracking-wider text-shadow-sm">{category.name.toUpperCase()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-red-400 font-black bg-red-900/50 px-2 py-1 rounded">{category.count}</span>
+                          </div>
+                        </div>
+                        {/* Expand/Collapse Icon */}
+                        <div
+                          className="mr-3 w-6 h-6 flex justify-center items-center transition-transform duration-300"
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleCategory(category.name);
                           }}
                         >
-                          {subs.length > 0 && (isExpanded ? <ChevronDown size={16} className="text-green-400" /> : <ChevronRight size={16} className="text-green-400" />)}
-                        </div>
-                        <div className="flex-1 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">{category.icon || '📦'}</span>
-                            <span className="font-medium text-white">{category.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-green-400 font-bold">{category.count}</span>
-                            <ChevronRight size={16} className="text-gray-400" />
-                          </div>
+                          {subs.length > 0 && (
+                            <Play 
+                              className={`w-4 h-4 text-red-400 transform transition-transform duration-300 ${
+                                isExpanded ? 'rotate-90' : 'rotate-0'
+                              }`}
+                            />
+                          )}
                         </div>
                       </div>
-                      
-                      {/* Subcategories */}
+
+                      {/* Subcategories Dropdown */}
                       {isExpanded && subs.length > 0 && (
-                        <div className="ml-8 mt-2 space-y-2">
-                          {subs.map(sub => (
+                        <div className="animate-fadeIn">
+                          {subs.map((sub, subIndex) => (
                             <div
                               key={sub.id}
                               onClick={() => handleSubcategoryClick(sub.id, category.name)}
-                              className="text-sm text-gray-400 hover:text-green-400 cursor-pointer p-2 rounded hover:bg-gray-800 transition-colors flex items-center justify-between border border-gray-800"
+                              className={`text-sm text-gray-300 hover:text-red-400 cursor-pointer p-4 w-full transition-all duration-300 flex items-center justify-between ${subIndex % 2 === 0
+                                ? 'bg-gray-700 hover:bg-gray-600'
+                                : 'bg-red-800/20 hover:bg-red-700/30'
+                                }`}
                             >
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs">{sub.icon || '📦'}</span>
-                                <span>{sub.name}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">{sub.icon || '💊'}</span>
+                                <span className="font-semibold">{sub.name}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-red-400 font-bold bg-red-900/50 px-2 py-1 rounded">
                                   {getSubcategoryProductCount(sub.id)}
                                 </span>
                               </div>
@@ -419,39 +461,74 @@ export default function Layout({ children, selectedCountry, selectedState, isAdm
               </div>
 
               {/* Top Vendors Section */}
-              <div className="border-t border-gray-700 pt-6">
-                <h3 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5" />
-                  Top Vendors
-                </h3>
-                <div className="space-y-3">
+              <div className="pt-6 mt-8">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-black text-red-400 mb-2 tracking-wider flex items-center justify-center gap-2">
+                    <Star className="w-5 h-5 text-red-400" />
+                    TOP VENDORS
+                  </h3>
+                  <div className="text-xs text-gray-400 font-mono">VERIFIED SELLERS</div>
+                </div>
+                <div className="space-y-0">
                   {/* Sample top vendors - you can make this dynamic */}
-                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded border border-gray-700">
+                  <div className="flex items-center justify-between p-4 w-full bg-gray-800 hover:bg-gray-700 transition-all duration-300">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center">
                         <User className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-white font-medium">amazon4drugs</span>
+                      <span className="text-white font-bold tracking-wide">AMAZON4DRUGS</span>
                     </div>
-                    <div className="text-orange-400 font-bold text-sm">100%</div>
+                    <div className="text-red-400 font-black text-sm bg-red-900/50 px-2 py-1 rounded">100%</div>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded border border-gray-700">
+
+                  <div className="flex items-center justify-between p-4 w-full bg-red-900/30 hover:bg-red-800/40 transition-all duration-300">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center">
                         <User className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-white font-medium">addyrus</span>
+                      <span className="text-white font-bold tracking-wide">ADDYRUS</span>
                     </div>
-                    <div className="text-orange-400 font-bold text-sm">100%</div>
+                    <div className="text-red-400 font-black text-sm bg-red-900/50 px-2 py-1 rounded">100%</div>
                   </div>
                 </div>
               </div>
+              
+              {/* Copyright Section */}
+              <div className="mt-auto pt-6 border-t border-gray-700">
+                <div className="text-center p-4">
+                  <div className="text-xs text-gray-500 font-mono mb-2">
+                    © 2024 SECURE MARKET
+                  </div>
+                  <div className="text-xs text-gray-600 font-mono">
+                    ENCRYPTED • ANONYMOUS • SECURE
+                  </div>
+                  <div className="text-xs text-gray-700 font-mono mt-1">
+                    All rights reserved
+                  </div>
+                </div>
+              </div>
+              
+              {/* Additional Spacing to Ensure Scrolling */}
+              <div className="h-20"></div>
             </div>
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 p-6 relative">
+            {/* Floating Security Indicator */}
+            <div className="absolute top-4 right-4 z-30">
+              <div className="bg-gradient-to-r from-red-900/90 to-red-800/90 backdrop-blur-sm border-2 border-red-500/50 rounded-lg p-3 shadow-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className="text-center">
+                    <div className="text-xs text-green-400 font-mono font-bold">SECURITY STATUS</div>
+                    <div className="text-xs text-red-300 font-mono">ACTIVE</div>
+                  </div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+            
             {children}
           </main>
         </div>
