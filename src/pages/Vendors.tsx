@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Shield, Clock, Search, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function Vendors() {
+  const navigate = useNavigate();
   const [vendors, setVendors] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('reputation');
@@ -167,7 +169,15 @@ export default function Vendors() {
                 <div className="text-4xl">🛡️</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-green-400">{vendor.username}</h3>
+                    <h3 
+                      className="font-bold text-green-400 hover:text-green-300 cursor-pointer transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/vendor/${vendor.id}`);
+                      }}
+                    >
+                      {vendor.username}
+                    </h3>
                     {vendor.is_verified && <Shield className="w-4 h-4 text-blue-400" title="Verified Vendor" />}
                   </div>
                   <div className="flex items-center gap-1">
@@ -207,7 +217,13 @@ export default function Vendors() {
               </div>
 
               <div className="flex gap-2">
-                <button className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-bold text-sm transition-colors">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/vendor/${vendor.id}`);
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-bold text-sm transition-colors"
+                >
                   VIEW STORE
                 </button>
                 <button className="px-4 bg-gray-700 hover:bg-gray-600 text-green-400 py-2 rounded font-bold text-sm transition-colors">

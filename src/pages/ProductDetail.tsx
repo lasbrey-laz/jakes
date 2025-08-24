@@ -346,7 +346,7 @@ export default function ProductDetail() {
                   <div className="flex justify-between">
                     <span className="text-gray-400">Vendor:</span>
                     <button 
-                      onClick={() => setShowVendorModal(true)}
+                      onClick={() => navigate(`/vendor/${product?.vendor_id}`)}
                       className="text-orange-400 font-bold hover:text-orange-300 cursor-pointer transition-colors"
                     >
                       {vendor?.username}
@@ -564,16 +564,28 @@ export default function ProductDetail() {
                 <div className="text-gray-400 text-xs">Vendor Type</div>
               </div>
 
-              <button
-                onClick={() => {
-                  setShowVendorModal(false);
-                  setShowChatModal(true);
-                }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
-              >
-                <MessageSquare className="w-5 h-5" />
-                Contact Vendor
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowVendorModal(false);
+                    navigate(`/vendor/${product?.vendor_id}`);
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
+                >
+                  <Package className="w-4 h-4" />
+                  View Store
+                </button>
+                <button
+                  onClick={() => {
+                    setShowVendorModal(false);
+                    setShowChatModal(true);
+                  }}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  Contact
+                </button>
+              </div>
             </div>
           </div>
         </div>

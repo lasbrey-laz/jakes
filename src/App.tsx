@@ -12,6 +12,7 @@ import PasswordReset from './pages/PasswordReset';
 import Categories from './pages/Categories';
 import ProductDetail from './pages/ProductDetail';
 import Vendors from './pages/Vendors';
+import VendorProducts from './pages/VendorProducts';
 import Orders from './pages/Orders';
 import Wallet from './pages/Wallet';
 import Support from './pages/Support';
@@ -266,6 +267,7 @@ function App() {
               <Route path="/categories" element={<Categories />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/vendors" element={<Vendors />} />
+              <Route path="/vendor/:id" element={<VendorProducts />} />
               <Route path="/support" element={<Support />} />
               <Route path="/become-vendor" element={<BecomeVendor />} />
               {/* Protected Routes - Require Authentication */}

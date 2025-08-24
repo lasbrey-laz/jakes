@@ -50,13 +50,35 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setUsers(data || []);
+      // Get all users using pagination
+      let allUsersData: any[] = [];
+      let hasMore = true;
+      let from = 0;
+      const batchSize = 1000;
+      
+      while (hasMore) {
+        const { data: batchData, error: batchError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + batchSize - 1);
+        
+        if (batchError) throw batchError;
+        
+        if (batchData && batchData.length > 0) {
+          allUsersData = [...allUsersData, ...batchData];
+          from += batchSize;
+          
+          // If we got less than batchSize, we've reached the end
+          if (batchData.length < batchSize) {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      setUsers(allUsersData);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -475,8 +497,14 @@ export default function AdminUsers() {
 
       {/* User Details Modal */}
       {showUserDetails && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-2xl mx-4 my-8">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto"
+          onClick={() => setShowUserDetails(false)}
+        >
+          <div 
+            className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-2xl mx-4 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">User Details</h3>
               <button
@@ -589,8 +617,14 @@ export default function AdminUsers() {
 
       {/* Edit User Modal */}
       {showEditModal && editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-md mx-4 my-8">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto"
+          onClick={() => setShowEditModal(false)}
+        >
+          <div 
+            className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-md mx-4 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">Edit User</h3>
               <button

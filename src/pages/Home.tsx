@@ -204,7 +204,15 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 mb-3">
-                    Vendor: <span className="text-green-400">{product.profiles?.username}</span>
+                    Vendor: <span 
+                      className="text-green-400 hover:text-green-300 cursor-pointer transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/vendor/${product.vendor_id}`);
+                      }}
+                    >
+                      {product.profiles?.username}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>Stock: {product.is_available ? 'Available' : 'Not in Stock'}</span>

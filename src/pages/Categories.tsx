@@ -295,7 +295,15 @@ export default function Categories() {
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 mb-3">
-                      Vendor: <span className="text-green-400">{product.profiles?.username}</span>
+                      Vendor: <span 
+                        className="text-green-400 hover:text-green-300 cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/vendor/${product.vendor_id}`);
+                        }}
+                      >
+                        {product.profiles?.username}
+                      </span>
                     </div>
                     <div className="text-xs text-gray-500">
                       Stock: {product.is_available ? 'Available' : 'Not in Stock'}
@@ -331,7 +339,15 @@ export default function Categories() {
                   <div className="flex-1">
                     <h3 className="font-bold text-green-400 mb-1">{product.title}</h3>
                     <div className="text-xs text-gray-500 mb-2">
-                      Vendor: <span className="text-green-400">{product.profiles?.username}</span>
+                      Vendor: <span 
+                        className="text-green-400 hover:text-green-300 cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/vendor/${product.vendor_id}`);
+                        }}
+                      >
+                        {product.profiles?.username}
+                      </span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col">

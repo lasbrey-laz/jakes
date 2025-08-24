@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Edit, Trash2, Search, Eye, Star, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Search, Eye, Star, Upload, X, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import { Country } from 'country-state-city';
 import { supabase, supabaseAdmin } from '../../lib/supabase';
 import { showGlobalError, showGlobalSuccess } from '../../components/CustomAlert';
+import cryptoConverter from '../../lib/cryptoConverter';
 
 
 
@@ -11,6 +12,7 @@ export default function AdminProducts() {
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [vendors, setVendors] = useState<any[]>([]);
+  const [allVendors, setAllVendors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
@@ -26,18 +28,21 @@ export default function AdminProducts() {
     btc: '',
     xmr: ''
   });
-  
+
   // User authentication state
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  
+
   // Country selection state
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [countrySearchTerm, setCountrySearchTerm] = useState('');
-  
+
   // Shipping to countries selection state
   const [showShippingToCountriesModal, setShowShippingToCountriesModal] = useState(false);
   const [shippingToCountriesSearchTerm, setShippingToCountriesSearchTerm] = useState('');
+
+  // Vendor search state
+  const [vendorSearchTerm, setVendorSearchTerm] = useState('');
 
   // Country helper functions
   const getCountryFlag = (countryCode: string) => {
@@ -55,7 +60,7 @@ export default function AdminProducts() {
     };
     return names[countryCode] || countryCode;
   };
-  
+
   // Predefined shipping methods
   const predefinedShippingMethods = [
     'USPS Priority Mail',
@@ -97,10 +102,12 @@ export default function AdminProducts() {
   ];
   const [newProduct, setNewProduct] = useState({
     vendor_id: '',
-    vendor_country_filter: '',
     title: '',
     description: '',
     price_btc: '',
+    price_xmr: '',
+    primary_currency: 'USD',
+    primary_amount: '',
     price_usd: '',
     price_gbp: '',
     price_eur: '',
@@ -117,7 +124,6 @@ export default function AdminProducts() {
     price_zar: '',
     price_rub: '',
     price_try: '',
-    price_xmr: '',
     category: '',
     subcategory_id: '',
     image_url: '',
@@ -153,24 +159,31 @@ export default function AdminProducts() {
     }
   }, [vendors]);
 
+  // Auto-convert primary currency to crypto when currency or amount changes
+  useEffect(() => {
+    if (newProduct.primary_amount && newProduct.primary_currency && parseFloat(newProduct.primary_amount) > 0) {
+      convertPrimaryToCrypto(newProduct.primary_amount, newProduct.primary_currency);
+    }
+  }, [newProduct.primary_currency]);
+
   const checkCurrentUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUser(user);
-        
-        // Get user profile to check if they're a vendor and get their country
+
+        // Get user profile to check if they're a vendor
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
-        
+
         if (!error && profile) {
           setUserProfile(profile);
-          
+
           // If user is a vendor, auto-select them in the vendor dropdown
-          if (profile.is_vendor && profile.country) {
+          if (profile.is_vendor) {
             // Find vendor by user ID and set as selected
             const vendorVendor = vendors.find(v => v.id === user.id);
             if (vendorVendor) {
@@ -188,56 +201,56 @@ export default function AdminProducts() {
   const validatePrices = (product: any) => {
     // USD fields: numeric(10, 2) - max 99,999,999.99
     const maxUsd = 99999999.99;
-    
+
     // GBP/EUR/AUD fields: numeric(12, 2) - max 9,999,999,999.99
     const maxGbpEurAud = 9999999999.99;
-    
+
     // BTC fields: numeric(16, 8) - max 99,999,999.99999999
     const maxBtc = 99999999.99999999;
-    
+
     // XMR fields: numeric(16, 12) - max 99,999,999.999999999999
     const maxXmr = 99999999.999999999999;
 
     if (product.price_usd && parseFloat(product.price_usd) > maxUsd) {
       return { error: `USD price cannot exceed $${maxUsd.toLocaleString()}` };
     }
-    
+
     if (product.price_gbp && parseFloat(product.price_gbp) > maxGbpEurAud) {
       return { error: `GBP price cannot exceed £${maxGbpEurAud.toLocaleString()}` };
     }
-    
+
     if (product.price_eur && parseFloat(product.price_eur) > maxGbpEurAud) {
       return { error: `EUR price cannot exceed €${maxGbpEurAud.toLocaleString()}` };
     }
-    
+
     if (product.price_aud && parseFloat(product.price_aud) > maxGbpEurAud) {
       return { error: `AUD price cannot exceed A$${maxGbpEurAud.toLocaleString()}` };
     }
-    
+
     if (product.price_btc && parseFloat(product.price_btc) > maxBtc) {
       return { error: `BTC price cannot exceed ${maxBtc.toLocaleString()} BTC` };
     }
-    
+
     if (product.price_xmr && parseFloat(product.price_xmr) > maxXmr) {
       return { error: `XMR price cannot exceed ${maxXmr.toLocaleString()} XMR` };
     }
-    
+
     if (product.shipping_cost_usd && parseFloat(product.shipping_cost_usd) > maxUsd) {
       return { error: `USD shipping cost cannot exceed $${maxUsd.toLocaleString()}` };
     }
-    
+
     if (product.shipping_cost_btc && parseFloat(product.shipping_cost_btc) > maxBtc) {
       return { error: `BTC shipping cost cannot exceed ${maxBtc.toLocaleString()} BTC` };
     }
-    
+
     if (product.shipping_cost_xmr && parseFloat(product.shipping_cost_xmr) > maxXmr) {
       return { error: `XMR shipping cost cannot exceed ${maxXmr.toLocaleString()} XMR` };
     }
-    
+
     if (product.minimum_order_amount_usd && parseFloat(product.minimum_order_amount_usd) > maxUsd) {
       return { error: `USD minimum order amount cannot exceed $${maxUsd.toLocaleString()}` };
     }
-    
+
     if (product.minimum_order_amount_xmr && parseFloat(product.minimum_order_amount_xmr) > maxXmr) {
       return { error: `XMR minimum order amount cannot exceed ${maxXmr.toLocaleString()} XMR` };
     }
@@ -274,20 +287,42 @@ export default function AdminProducts() {
 
       if (subcategoriesError) throw subcategoriesError;
 
-      // Fetch vendors
-      const { data: vendorsData, error: vendorsError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('is_vendor', true)
-        .eq('is_active', true)
-        .order('username');
+      // Fetch vendors - get all vendors using pagination
+      let allVendorsData: any[] = [];
+      let hasMore = true;
+      let from = 0;
+      const batchSize = 1000;
 
-      if (vendorsError) throw vendorsError;
+      while (hasMore) {
+        const { data: batchData, error: batchError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('is_vendor', true)
+          .order('username')
+          .range(from, from + batchSize - 1);
+
+        if (batchError) throw batchError;
+
+        if (batchData && batchData.length > 0) {
+          allVendorsData = [...allVendorsData, ...batchData];
+          from += batchSize;
+
+          // If we got less than batchSize, we've reached the end
+          if (batchData.length < batchSize) {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+
+      const vendorsData = allVendorsData;
 
       setProducts(productsData || []);
       setCategories(categoriesData || []);
       setSubcategories(subcategoriesData || []);
       setVendors(vendorsData || []);
+      setAllVendors(vendorsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -295,9 +330,28 @@ export default function AdminProducts() {
     }
   };
 
+  // Function to convert primary currency to crypto amounts
+  const convertPrimaryToCrypto = async (amount: string, currency: string) => {
+    if (!amount || parseFloat(amount) <= 0) return;
+    
+    try {
+      const numAmount = parseFloat(amount);
+      const btcAmount = await cryptoConverter.convertToBTC(numAmount, currency.toLowerCase() as any);
+      const xmrAmount = await cryptoConverter.convertToXMR(numAmount, currency.toLowerCase() as any);
+      
+      setNewProduct(prev => ({
+        ...prev,
+        price_btc: btcAmount.toString(),
+        price_xmr: xmrAmount.toString()
+      }));
+    } catch (error) {
+      console.error('Error converting to crypto:', error);
+    }
+  };
+
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProduct.vendor_id || !newProduct.title || !newProduct.description || !newProduct.price_btc || !newProduct.category) {
+    if (!newProduct.vendor_id || !newProduct.title || !newProduct.description || !newProduct.primary_amount || !newProduct.category) {
       showGlobalError('Please fill in all required fields');
       return;
     }
@@ -311,10 +365,17 @@ export default function AdminProducts() {
 
     setCreating(true);
     try {
-      const { vendor_country_filter, ...productDataWithoutFilter } = newProduct;
+      // Set the primary currency amount based on the selected currency
+      const primaryCurrencyKey = `price_${newProduct.primary_currency.toLowerCase()}` as keyof typeof newProduct;
+      const primaryAmount = parseFloat(newProduct.primary_amount);
+      
       const productData = {
-        ...productDataWithoutFilter,
+        vendor_id: newProduct.vendor_id,
+        title: newProduct.title,
+        description: newProduct.description,
         price_btc: parseFloat(newProduct.price_btc),
+        price_xmr: newProduct.price_xmr ? parseFloat(newProduct.price_xmr) : null,
+        [primaryCurrencyKey]: primaryAmount,
         price_usd: newProduct.price_usd ? parseFloat(newProduct.price_usd) : null,
         price_gbp: newProduct.price_gbp ? parseFloat(newProduct.price_gbp) : null,
         price_eur: newProduct.price_eur ? parseFloat(newProduct.price_eur) : null,
@@ -331,7 +392,13 @@ export default function AdminProducts() {
         price_zar: newProduct.price_zar ? parseFloat(newProduct.price_zar) : null,
         price_rub: newProduct.price_rub ? parseFloat(newProduct.price_rub) : null,
         price_try: newProduct.price_try ? parseFloat(newProduct.price_try) : null,
-        price_xmr: newProduct.price_xmr ? parseFloat(newProduct.price_xmr) : null,
+        category: newProduct.category,
+        subcategory_id: newProduct.subcategory_id || null,
+        image_url: newProduct.image_url,
+        image_urls: newProduct.image_urls.length > 0 ? newProduct.image_urls : null,
+        is_available: newProduct.is_available,
+        is_active: newProduct.is_active,
+        accepts_monero: newProduct.accepts_monero,
         shipping_from_country: newProduct.shipping_from_country || null,
         shipping_to_countries: newProduct.shipping_to_countries && newProduct.shipping_to_countries.length > 0 ? newProduct.shipping_to_countries : [],
         shipping_worldwide: newProduct.shipping_worldwide,
@@ -344,8 +411,10 @@ export default function AdminProducts() {
         shipping_methods: newProduct.shipping_methods && newProduct.shipping_methods.length > 0 ? newProduct.shipping_methods : [],
         minimum_order_amount_usd: newProduct.minimum_order_amount_usd ? parseFloat(newProduct.minimum_order_amount_usd) : null,
         minimum_order_amount_xmr: newProduct.minimum_order_amount_xmr ? parseFloat(newProduct.minimum_order_amount_xmr) : null,
-        subcategory_id: newProduct.subcategory_id || null,
-        image_urls: newProduct.image_urls.length > 0 ? newProduct.image_urls : null
+        listing_type: newProduct.listing_type,
+        unit_type: newProduct.unit_type,
+        refund_policy: newProduct.refund_policy,
+        package_lost_policy: newProduct.package_lost_policy
       };
 
       console.log('Creating product with data:', productData);
@@ -356,9 +425,9 @@ export default function AdminProducts() {
         .select();
 
       if (error) throw error;
-      
-            console.log('Product created successfully:', data);
-      
+
+      console.log('Product created successfully:', data);
+
       // Test: Try to read the created product to verify data was saved
       if (data && data[0]) {
         const { data: readData, error: readError } = await supabase
@@ -366,7 +435,7 @@ export default function AdminProducts() {
           .select('*')
           .eq('id', data[0].id)
           .single();
-        
+
         if (readError) {
           console.error('Error reading created product:', readError);
         } else {
@@ -377,27 +446,28 @@ export default function AdminProducts() {
       // Reset form
       setNewProduct({
         vendor_id: '',
-        vendor_country_filter: '',
         title: '',
         description: '',
-            price_btc: '',
-    price_usd: '',
-    price_gbp: '',
-    price_eur: '',
-    price_aud: '',
-    price_cad: '',
-    price_jpy: '',
-    price_cny: '',
-    price_inr: '',
-    price_brl: '',
-    price_mxn: '',
-    price_ngn: '',
-    price_ghs: '',
-    price_kes: '',
-    price_zar: '',
-    price_rub: '',
-    price_try: '',
-    price_xmr: '',
+        price_btc: '',
+        price_xmr: '',
+        primary_currency: 'USD',
+        primary_amount: '',
+        price_usd: '',
+        price_gbp: '',
+        price_eur: '',
+        price_aud: '',
+        price_cad: '',
+        price_jpy: '',
+        price_cny: '',
+        price_inr: '',
+        price_brl: '',
+        price_mxn: '',
+        price_ngn: '',
+        price_ghs: '',
+        price_kes: '',
+        price_zar: '',
+        price_rub: '',
+        price_try: '',
         category: '',
         subcategory_id: '',
         image_url: '',
@@ -422,6 +492,7 @@ export default function AdminProducts() {
         refund_policy: '',
         package_lost_policy: ''
       });
+      setVendorSearchTerm('');
       setShowCreateModal(false);
       fetchData();
       showGlobalSuccess('Product created successfully!');
@@ -437,7 +508,7 @@ export default function AdminProducts() {
     e.preventDefault();
     if (!editingProduct) return;
 
-    if (!editingProduct.vendor_id || !editingProduct.title || !editingProduct.description || !editingProduct.price_btc || !editingProduct.category) {
+    if (!editingProduct.vendor_id || !editingProduct.title || !editingProduct.description || !editingProduct.category) {
       showGlobalError('Please fill in all required fields');
       return;
     }
@@ -507,10 +578,11 @@ export default function AdminProducts() {
         .select();
 
       if (error) throw error;
-      
+
       console.log('Product updated successfully:', data);
 
       setEditingProduct(null);
+      setVendorSearchTerm('');
       fetchData();
       showGlobalSuccess('Product updated successfully!');
     } catch (error) {
@@ -521,7 +593,7 @@ export default function AdminProducts() {
 
   const handleDeleteProduct = async (id: string) => {
     const reason = prompt('Please provide a reason for deletion (optional):');
-    
+
     try {
       // Use the new function to move product to deleted_products table
       const { data, error } = await supabase
@@ -578,10 +650,10 @@ export default function AdminProducts() {
     setUploadingImages(true);
     try {
       const uploadedUrls: string[] = [];
-      
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+
         // Validate file type
         if (!file.type.startsWith('image/')) {
           showGlobalError(`File ${file.name} is not an image. Please select only image files.`);
@@ -651,8 +723,8 @@ export default function AdminProducts() {
     const currentMethods = Array.isArray(currentProduct.shipping_methods) ? currentProduct.shipping_methods : [];
     if (!currentMethods.includes(method)) {
       const newMethods = [...currentMethods, method];
-      productSetter({ 
-        ...currentProduct, 
+      productSetter({
+        ...currentProduct,
         shipping_methods: newMethods
       });
     }
@@ -661,8 +733,8 @@ export default function AdminProducts() {
   const removeShippingMethod = (productSetter: any, currentProduct: any, method: string) => {
     const currentMethods = Array.isArray(currentProduct.shipping_methods) ? currentProduct.shipping_methods : [];
     const newMethods = currentMethods.filter((m: string) => m !== method);
-    productSetter({ 
-      ...currentProduct, 
+    productSetter({
+      ...currentProduct,
       shipping_methods: newMethods
     });
   };
@@ -671,7 +743,7 @@ export default function AdminProducts() {
     if (customShippingMethod.trim()) {
       const method = customShippingMethod.trim();
       addShippingMethod(productSetter, currentProduct, method);
-      
+
       // Reset custom form
       setCustomShippingMethod('');
       setCustomShippingCosts({ usd: '', btc: '', xmr: '' });
@@ -684,8 +756,8 @@ export default function AdminProducts() {
     const currentCountries = Array.isArray(currentProduct.shipping_to_countries) ? currentProduct.shipping_to_countries : [];
     if (!currentCountries.includes(countryCode)) {
       const newCountries = [...currentCountries, countryCode];
-      productSetter({ 
-        ...currentProduct, 
+      productSetter({
+        ...currentProduct,
         shipping_to_countries: newCountries
       });
     }
@@ -694,15 +766,15 @@ export default function AdminProducts() {
   const removeShippingToCountry = (productSetter: any, currentProduct: any, countryCode: string) => {
     const currentCountries = Array.isArray(currentProduct.shipping_to_countries) ? currentProduct.shipping_to_countries : [];
     const newCountries = currentCountries.filter((code: string) => code !== countryCode);
-    productSetter({ 
-      ...currentProduct, 
+    productSetter({
+      ...currentProduct,
       shipping_to_countries: newCountries
     });
   };
 
   const getFilteredShippingMethods = () => {
     const selectedMethods = Array.isArray(newProduct.shipping_methods) ? newProduct.shipping_methods : [];
-    return predefinedShippingMethods.filter(method => 
+    return predefinedShippingMethods.filter(method =>
       !selectedMethods.includes(method) &&
       method.toLowerCase().includes(shippingSearchTerm.toLowerCase())
     );
@@ -710,7 +782,7 @@ export default function AdminProducts() {
 
   // Get filtered countries for search
   const getFilteredCountries = () => {
-    return Country.getAllCountries().filter(country => 
+    return Country.getAllCountries().filter(country =>
       country.name.toLowerCase().includes(countrySearchTerm.toLowerCase()) ||
       country.isoCode.toLowerCase().includes(countrySearchTerm.toLowerCase())
     );
@@ -719,18 +791,18 @@ export default function AdminProducts() {
   // Get filtered countries for shipping to countries
   const getFilteredShippingToCountries = () => {
     const selectedCountries = editingProduct ? (editingProduct.shipping_to_countries || []) : (newProduct.shipping_to_countries || []);
-    return Country.getAllCountries().filter(country => 
+    return Country.getAllCountries().filter(country =>
       !selectedCountries.includes(country.isoCode) &&
       (country.name.toLowerCase().includes(shippingToCountriesSearchTerm.toLowerCase()) ||
-       country.isoCode.toLowerCase().includes(shippingToCountriesSearchTerm.toLowerCase()))
+        country.isoCode.toLowerCase().includes(shippingToCountriesSearchTerm.toLowerCase()))
     );
   };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.profiles?.username.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.profiles?.username.toLowerCase().includes(searchTerm.toLowerCase());
+
     let matchesFilter = true;
     if (filter === 'active') matchesFilter = product.is_active;
     else if (filter === 'inactive') matchesFilter = !product.is_active;
@@ -786,11 +858,10 @@ export default function AdminProducts() {
               <button
                 key={filterType}
                 onClick={() => setFilter(filterType)}
-                className={`px-3 py-2 rounded font-bold text-xs transition-colors ${
-                  filter === filterType
+                className={`px-3 py-2 rounded font-bold text-xs transition-colors ${filter === filterType
                     ? 'bg-red-600 text-white'
                     : 'bg-gray-700 text-gray-400 hover:text-green-400'
-                }`}
+                  }`}
               >
                 {filterType.toUpperCase()}
               </button>
@@ -864,11 +935,10 @@ export default function AdminProducts() {
                   <td className="p-4">
                     <button
                       onClick={() => toggleProductStatus(product.id, product.is_active)}
-                      className={`px-3 py-1 rounded text-xs font-bold ${
-                        product.is_active
+                      className={`px-3 py-1 rounded text-xs font-bold ${product.is_active
                           ? 'bg-green-600 text-white'
                           : 'bg-red-600 text-white'
-                      }`}
+                        }`}
                     >
                       {product.is_active ? 'ACTIVE' : 'INACTIVE'}
                     </button>
@@ -877,17 +947,17 @@ export default function AdminProducts() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingProduct({
-                  ...product,
-                  shipping_methods: product.shipping_methods || ['USPS Priority', 'Tracking Mail', 'Post Express with Tracking', 'Express Envelope', 'Express Satchel', 'Combined Shipping'],
-                  shipping_method_costs: product.shipping_method_costs || {
-                    'USPS Priority': { usd: 15.00, btc: 0.0005, xmr: 0.05 },
-                    'Tracking Mail': { usd: 8.00, btc: 0.0003, xmr: 0.03 },
-                    'Post Express with Tracking': { usd: 25.00, btc: 0.0008, xmr: 0.08 },
-                    'Express Envelope': { usd: 12.00, btc: 0.0004, xmr: 0.04 },
-                    'Express Satchel': { usd: 18.00, btc: 0.0006, xmr: 0.06 },
-                    'Combined Shipping': { usd: 5.00, btc: 0.0002, xmr: 0.02 }
-                  }
-                })}
+                          ...product,
+                          shipping_methods: product.shipping_methods || ['USPS Priority', 'Tracking Mail', 'Post Express with Tracking', 'Express Envelope', 'Express Satchel', 'Combined Shipping'],
+                          shipping_method_costs: product.shipping_method_costs || {
+                            'USPS Priority': { usd: 15.00, btc: 0.0005, xmr: 0.05 },
+                            'Tracking Mail': { usd: 8.00, btc: 0.0003, xmr: 0.03 },
+                            'Post Express with Tracking': { usd: 25.00, btc: 0.0008, xmr: 0.08 },
+                            'Express Envelope': { usd: 12.00, btc: 0.0004, xmr: 0.04 },
+                            'Express Satchel': { usd: 18.00, btc: 0.0006, xmr: 0.06 },
+                            'Combined Shipping': { usd: 5.00, btc: 0.0002, xmr: 0.02 }
+                          }
+                        })}
                         className="text-blue-400 hover:text-blue-300"
                       >
                         <Edit className="w-4 h-4" />
@@ -919,44 +989,46 @@ export default function AdminProducts() {
 
       {/* Create Product Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-4xl mx-4 my-8">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-4xl mx-4 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold text-white mb-4">Create New Product</h3>
             <form onSubmit={handleCreateProduct} className="space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-green-400 text-sm mb-2">Vendor *</label>
-                  
-                  {/* Country Filter */}
+
+                  {/* Vendor Search */}
                   <div className="mb-2">
-                    <select
-                      value={newProduct.vendor_country_filter || ''}
-                      onChange={(e) => setNewProduct({ ...newProduct, vendor_country_filter: e.target.value, vendor_id: '' })}
+                    <input
+                      type="text"
+                      placeholder="Search vendors..."
+                      value={vendorSearchTerm}
                       className="w-full bg-black border border-gray-600 text-green-400 p-2 rounded focus:border-green-500 focus:outline-none text-sm"
-                    >
-                      <option value="">All Countries</option>
-                      <option value="US">🇺🇸 United States</option>
-                      <option value="CA">🇨🇦 Canada</option>
-                      <option value="GB">🇬🇧 United Kingdom</option>
-                      <option value="FR">🇫🇷 France</option>
-                      <option value="DE">🇩🇪 Germany</option>
-                      <option value="AU">🇦🇺 Australia</option>
-                      <option value="JP">🇯🇵 Japan</option>
-                      <option value="BR">🇧🇷 Brazil</option>
-                      <option value="IN">🇮🇳 India</option>
-                      <option value="MX">🇲🇽 Mexico</option>
-                    </select>
+                      onChange={(e) => {
+                        const searchTerm = e.target.value;
+                        setVendorSearchTerm(searchTerm);
+                      }}
+                    />
                   </div>
-                  
+
                   <select
                     value={newProduct.vendor_id}
                     onChange={(e) => setNewProduct({ ...newProduct, vendor_id: e.target.value })}
                     required
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                   >
-                    <option value="">Select vendor...</option>
-                    {vendors
-                      .filter(vendor => !newProduct.vendor_country_filter || vendor.country === newProduct.vendor_country_filter)
+                    <option value="">Select vendor... ({allVendors.length} total vendors)</option>
+                    {allVendors
+                      .filter(vendor =>
+                        !vendorSearchTerm ||
+                        vendor.username.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+                      )
                       .map(vendor => (
                         <option key={vendor.id} value={vendor.id}>
                           {vendor.username}
@@ -967,7 +1039,8 @@ export default function AdminProducts() {
                   </select>
                   {userProfile?.is_vendor && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Auto-selected: {userProfile.username} from {getCountryFlag(userProfile.country)} {getCountryName(userProfile.country)}
+                      Auto-selected: {userProfile.username}
+                      {userProfile.country && ` from ${getCountryFlag(userProfile.country)} ${getCountryName(userProfile.country)}`}
                     </p>
                   )}
                 </div>
@@ -999,225 +1072,122 @@ export default function AdminProducts() {
               {/* Pricing Section */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white">Pricing</h3>
-                
-                {/* Primary Currencies */}
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price BTC *</label>
-                    <input
-                      type="number"
-                      step="0.00000001"
-                      value={newProduct.price_btc}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_btc: e.target.value })}
-                      required
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00000000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price USD</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_usd}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_usd: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                      max="99999999.99"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Max: $99,999,999.99</p>
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price XMR</label>
-                    <input
-                      type="number"
-                      step="0.000000000001"
-                      value={newProduct.price_xmr}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_xmr: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.000000000000"
-                    />
+
+                {/* Primary Currency Input */}
+                <div className="bg-blue-900/20 border border-blue-500 rounded-lg p-4">
+                  <h4 className="text-blue-400 font-semibold mb-3">Primary Currency (Auto-converts to Crypto)</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-blue-400 text-sm mb-2">Currency *</label>
+                      <select
+                        value={newProduct.primary_currency}
+                        onChange={(e) => setNewProduct({ ...newProduct, primary_currency: e.target.value })}
+                        className="w-full bg-black border border-gray-600 text-blue-400 p-3 rounded focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="JPY">JPY - Japanese Yen</option>
+                        <option value="CNY">CNY - Chinese Yuan</option>
+                        <option value="INR">INR - Indian Rupee</option>
+                        <option value="BRL">BRL - Brazilian Real</option>
+                        <option value="MXN">MXN - Mexican Peso</option>
+                        <option value="NGN">NGN - Nigerian Naira</option>
+                        <option value="GHS">GHS - Ghanaian Cedi</option>
+                        <option value="KES">KES - Kenyan Shilling</option>
+                        <option value="ZAR">ZAR - South African Rand</option>
+                        <option value="RUB">RUB - Russian Ruble</option>
+                        <option value="TRY">TRY - Turkish Lira</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-blue-400 text-sm mb-2">Amount *</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={newProduct.primary_amount}
+                          onChange={(e) => {
+                            setNewProduct({ ...newProduct, primary_amount: e.target.value });
+                            // Auto-convert to crypto when amount changes
+                            if (e.target.value && newProduct.primary_currency) {
+                              convertPrimaryToCrypto(e.target.value, newProduct.primary_currency);
+                            }
+                          }}
+                          required
+                          className="flex-1 bg-black border border-gray-600 text-blue-400 p-3 rounded focus:border-blue-500 focus:outline-none"
+                          placeholder="0.00"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newProduct.primary_amount && newProduct.primary_currency) {
+                              convertPrimaryToCrypto(newProduct.primary_amount, newProduct.primary_currency);
+                            }
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-3 rounded transition-colors"
+                          title="Refresh crypto conversion rates"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Additional Currencies */}
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price GBP</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_gbp}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_gbp: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price EUR</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_eur}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_eur: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price CAD</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_cad}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_cad: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price AUD</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_aud}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_aud: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
+                {/* Current Exchange Rates */}
+                <div className="bg-yellow-900/20 border border-yellow-500 rounded-lg p-4">
+                  <h4 className="text-yellow-400 font-semibold mb-3">Current Exchange Rates</h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-yellow-400 font-medium">1 BTC = </span>
+                      <span className="text-white">
+                        {newProduct.primary_currency && newProduct.primary_amount ? 
+                          `$${(parseFloat(newProduct.primary_amount || '0') / parseFloat(newProduct.price_btc || '1')).toFixed(2)} ${newProduct.primary_currency}` : 
+                          'Enter amount to see rate'
+                        }
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-yellow-400 font-medium">1 XMR = </span>
+                      <span className="text-white">
+                        {newProduct.primary_currency && newProduct.primary_amount ? 
+                          `$${(parseFloat(newProduct.primary_amount || '0') / parseFloat(newProduct.price_xmr || '1')).toFixed(2)} ${newProduct.primary_currency}` : 
+                          'Enter amount to see rate'
+                        }
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* More Currencies */}
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price JPY</label>
-                    <input
-                      type="number"
-                      step="1"
-                      value={newProduct.price_jpy}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_jpy: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price CNY</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_cny}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_cny: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price INR</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_inr}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_inr: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price BRL</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_brl}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_brl: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-
-                {/* Regional Currencies */}
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price MXN</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_mxn}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_mxn: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price NGN</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_ngn}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_ngn: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price GHS</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_ghs}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_ghs: e.target.value })}
-                      className="w-full bg-black border border-gray-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price KES</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_kes}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_kes: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-
-                {/* Additional Regional Currencies */}
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price ZAR</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_zar}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_zar: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price RUB</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_rub}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_rub: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-green-400 text-sm mb-2">Price TRY</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price_try}
-                      onChange={(e) => setNewProduct({ ...newProduct, price_try: e.target.value })}
-                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                      placeholder="0.00"
-                    />
+                {/* Auto-calculated Crypto Prices */}
+                <div className="bg-green-900/20 border border-green-500 rounded-lg p-4">
+                  <h4 className="text-green-400 font-semibold mb-3">Auto-calculated Crypto Prices</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-green-400 text-sm mb-2">Price BTC (Auto-calculated)</label>
+                      <input
+                        type="text"
+                        value={newProduct.price_btc}
+                        readOnly
+                        className="w-full bg-gray-800 border border-gray-600 text-green-400 p-3 rounded cursor-not-allowed"
+                        placeholder="0.00000000"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Auto-updated from primary currency</p>
+                    </div>
+                    <div>
+                      <label className="block text-green-400 text-sm mb-2">Price XMR (Auto-calculated)</label>
+                      <input
+                        type="text"
+                        value={newProduct.price_xmr}
+                        readOnly
+                        className="w-full bg-gray-800 border border-gray-600 text-green-400 p-3 rounded cursor-not-allowed"
+                        placeholder="0.000000000000"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Auto-updated from primary currency</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1259,14 +1229,14 @@ export default function AdminProducts() {
               {/* Image Upload Section */}
               <div>
                 <label className="block text-green-400 text-sm mb-2">Product Images</label>
-                
+
                 {/* File Upload Area */}
                 <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center mb-4">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-400 mb-4">
                     Select images from your device (JPG, PNG, GIF - Max 5MB each)
                   </p>
-                      <input
+                  <input
                     type="file"
                     multiple
                     accept="image/*"
@@ -1277,11 +1247,10 @@ export default function AdminProducts() {
                   />
                   <label
                     htmlFor="file-upload-new"
-                    className={`inline-flex items-center gap-2 px-6 py-3 rounded font-bold cursor-pointer transition-colors ${
-                      uploadingImages 
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                    className={`inline-flex items-center gap-2 px-6 py-3 rounded font-bold cursor-pointer transition-colors ${uploadingImages
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                         : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
+                      }`}
                   >
                     {uploadingImages ? (
                       <>
@@ -1318,14 +1287,14 @@ export default function AdminProducts() {
                             alt={`Product image ${index + 1}`}
                             className="w-full h-24 object-cover rounded border border-gray-600"
                           />
-                  <button
-                    type="button"
+                          <button
+                            type="button"
                             onClick={() => removeImage(index, setNewProduct, newProduct)}
                             className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+                          >
                             <X className="w-3 h-3" />
-                  </button>
-                </div>
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1369,7 +1338,7 @@ export default function AdminProducts() {
                     <label className="block text-green-400 text-sm mb-2">Stock Status</label>
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2">
-                    <input
+                        <input
                           type="checkbox"
                           checked={newProduct.is_available}
                           onChange={(e) => setNewProduct({ ...newProduct, is_available: e.target.checked })}
@@ -1403,7 +1372,7 @@ export default function AdminProducts() {
                       Add Country
                     </button>
                   </div>
-                  
+
                   {/* Selected Countries */}
                   {Array.isArray(newProduct.shipping_to_countries) && newProduct.shipping_to_countries.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -1473,7 +1442,7 @@ export default function AdminProducts() {
               {/* Enhanced Shipping Methods */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
+                  <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
                   <button
                     type="button"
                     onClick={() => setShowShippingModal(true)}
@@ -1483,12 +1452,12 @@ export default function AdminProducts() {
                     Add Method
                   </button>
                 </div>
-                
+
                 {/* Selected Shipping Methods */}
                 {Array.isArray(newProduct.shipping_methods) && newProduct.shipping_methods.length > 0 ? (
-                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     {newProduct.shipping_methods.map((method: string) => (
-                    <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
+                      <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 text-sm font-medium">{method}</span>
                           <button
@@ -1508,42 +1477,120 @@ export default function AdminProducts() {
                     <p className="text-gray-500 text-xs mt-1">Click "Add Method" to get started</p>
                   </div>
                 )}
-                      </div>
-                      
+              </div>
+
               {/* Shipping Costs */}
               <div className="grid md:grid-cols-3 gap-4">
-                        <div>
+                <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost USD</label>
-                          <input
-                            type="number"
-                            step="0.01"
+                  <input
+                    type="number"
+                    step="0.01"
                     value={newProduct.shipping_cost_usd}
                     onChange={(e) => setNewProduct({ ...newProduct, shipping_cost_usd: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                            placeholder="0.00"
-                          />
-                        </div>
-                        <div>
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost BTC</label>
-                          <input
-                            type="number"
-                            step="0.00000001"
+                  <input
+                    type="number"
+                    step="0.00000001"
                     value={newProduct.shipping_cost_btc}
                     onChange={(e) => setNewProduct({ ...newProduct, shipping_cost_btc: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                            placeholder="0.00000000"
-                          />
-                        </div>
-                        <div>
+                    placeholder="0.00000000"
+                  />
+                </div>
+                <div>
                   <label className="block text-green-400 text-sm mb-2">Shipping Cost XMR</label>
-                          <input
-                            type="number"
-                            step="0.000000000001"
+                  <input
+                    type="number"
+                    step="0.000000000001"
                     value={newProduct.shipping_cost_xmr}
                     onChange={(e) => setNewProduct({ ...newProduct, shipping_cost_xmr: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                            placeholder="0.000000000000"
-                          />
+                    placeholder="0.000000000000"
+                  />
+                </div>
+              </div>
+
+              {/* Order Requirements & Listing Details */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-white">Order Requirements & Listing Details</h4>
+                
+                {/* Minimum Order Amounts */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Minimum Order USD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.minimum_order_amount_usd}
+                      onChange={(e) => setNewProduct({ ...newProduct, minimum_order_amount_usd: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Minimum Order XMR</label>
+                    <input
+                      type="number"
+                      step="0.000000000001"
+                      value={newProduct.minimum_order_amount_xmr}
+                      onChange={(e) => setNewProduct({ ...newProduct, minimum_order_amount_xmr: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.000000000000"
+                    />
+                  </div>
+                </div>
+
+                {/* Listing Type and Unit Type */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Listing Type</label>
+                    <select
+                      value={newProduct.listing_type}
+                      onChange={(e) => setNewProduct({ ...newProduct, listing_type: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                    >
+                      <option value="escrow">Escrow</option>
+                      <option value="direct">Direct</option>
+                      <option value="auction">Auction</option>
+                      <option value="bundle">Bundle</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Unit Type</label>
+                    <select
+                      value={newProduct.unit_type}
+                      onChange={(e) => setNewProduct({ ...newProduct, unit_type: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                    >
+                      <option value="piece">Piece</option>
+                      <option value="gram">Gram</option>
+                      <option value="kilogram">Kilogram</option>
+                      <option value="ounce">Ounce</option>
+                      <option value="pound">Pound</option>
+                      <option value="liter">Liter</option>
+                      <option value="gallon">Gallon</option>
+                      <option value="meter">Meter</option>
+                      <option value="yard">Yard</option>
+                      <option value="foot">Foot</option>
+                      <option value="inch">Inch</option>
+                      <option value="set">Set</option>
+                      <option value="pair">Pair</option>
+                      <option value="dozen">Dozen</option>
+                      <option value="box">Box</option>
+                      <option value="bottle">Bottle</option>
+                      <option value="can">Can</option>
+                      <option value="bag">Bag</option>
+                      <option value="roll">Roll</option>
+                      <option value="sheet">Sheet</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1603,7 +1650,10 @@ export default function AdminProducts() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setVendorSearchTerm('');
+                  }}
                   className="bg-gray-700 hover:bg-gray-600 text-green-400 px-6 py-3 rounded font-bold transition-colors"
                 >
                   Cancel
@@ -1616,27 +1666,53 @@ export default function AdminProducts() {
 
       {/* Edit Product Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-4xl mx-4 my-8">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto"
+          onClick={() => setEditingProduct(null)}
+        >
+          <div
+            className="bg-gray-900 border border-green-500 rounded-lg p-6 w-full max-w-4xl mx-4 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold text-white mb-4">Edit Product</h3>
             <form onSubmit={handleUpdateProduct} className="space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-green-400 text-sm mb-2">Vendor *</label>
+
+                  {/* Vendor Search */}
+                  <div className="mb-2">
+                    <input
+                      type="text"
+                      placeholder="Search vendors..."
+                      value={vendorSearchTerm}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-2 rounded focus:border-green-500 focus:outline-none text-sm"
+                      onChange={(e) => {
+                        const searchTerm = e.target.value;
+                        setVendorSearchTerm(searchTerm);
+                      }}
+                    />
+                  </div>
+
                   <select
                     value={editingProduct.vendor_id}
                     onChange={(e) => setEditingProduct({ ...editingProduct, vendor_id: e.target.value })}
                     required
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                   >
-                    <option value="">Select vendor...</option>
-                    {vendors.map(vendor => (
-                      <option key={vendor.id} value={vendor.id}>
-                        {vendor.username}
-                        {vendor.country && ` (${getCountryFlag(vendor.country)} ${getCountryName(vendor.country)})`}
-                        {vendor.id === currentUser?.id && ' (You)'}
-                      </option>
-                    ))}
+                    <option value="">Select vendor... ({allVendors.length} total vendors)</option>
+                    {allVendors
+                      .filter(vendor =>
+                        !vendorSearchTerm ||
+                        vendor.username.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+                      )
+                      .map(vendor => (
+                        <option key={vendor.id} value={vendor.id}>
+                          {vendor.username}
+                          {vendor.country && ` (${getCountryFlag(vendor.country)} ${getCountryName(vendor.country)})`}
+                          {vendor.id === currentUser?.id && ' (You)'}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div>
@@ -1705,7 +1781,7 @@ export default function AdminProducts() {
               {/* Additional Pricing Currencies */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white">Pricing</h3>
-                
+
                 {/* Primary Currencies */}
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
@@ -1963,14 +2039,14 @@ export default function AdminProducts() {
               {/* Image Upload Section */}
               <div>
                 <label className="block text-green-400 text-sm mb-2">Product Images</label>
-                
+
                 {/* File Upload Area */}
                 <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center mb-4">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-400 mb-4">
                     Select images from your device (JPG, PNG, GIF - Max 5MB each)
                   </p>
-                      <input
+                  <input
                     type="file"
                     multiple
                     accept="image/*"
@@ -1981,11 +2057,10 @@ export default function AdminProducts() {
                   />
                   <label
                     htmlFor="file-upload-edit"
-                    className={`inline-flex items-center gap-2 px-6 py-3 rounded font-bold cursor-pointer transition-colors ${
-                      uploadingImages 
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                    className={`inline-flex items-center gap-2 px-6 py-3 rounded font-bold cursor-pointer transition-colors ${uploadingImages
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                         : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
+                      }`}
                   >
                     {uploadingImages ? (
                       <>
@@ -2022,17 +2097,17 @@ export default function AdminProducts() {
                             alt={`Product image ${index + 1}`}
                             className="w-full h-24 object-cover rounded border border-gray-600"
                           />
-                  <button
-                    type="button"
+                          <button
+                            type="button"
                             onClick={() => removeImage(index, setEditingProduct, editingProduct)}
                             className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+                          >
                             <X className="w-3 h-3" />
-                  </button>
-                </div>
+                          </button>
+                        </div>
                       ))}
-              </div>
-                </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -2109,7 +2184,7 @@ export default function AdminProducts() {
                       Add Country
                     </button>
                   </div>
-                  
+
                   {/* Selected Countries */}
                   {editingProduct.shipping_to_countries && editingProduct.shipping_to_countries.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -2127,7 +2202,7 @@ export default function AdminProducts() {
                           </button>
                         </div>
                       ))}
-                  </div>
+                    </div>
                   ) : (
                     <div className="text-center py-3 bg-gray-800 border border-gray-600 rounded">
                       <p className="text-gray-400 text-sm">No countries selected</p>
@@ -2228,7 +2303,7 @@ export default function AdminProducts() {
                 {/* Enhanced Shipping Methods */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                  <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
+                    <h5 className="font-semibold text-white text-sm">Shipping Methods</h5>
                     <button
                       type="button"
                       onClick={() => setShowShippingModal(true)}
@@ -2238,12 +2313,12 @@ export default function AdminProducts() {
                       Add Method
                     </button>
                   </div>
-                  
+
                   {/* Selected Shipping Methods */}
                   {editingProduct.shipping_methods && editingProduct.shipping_methods.length > 0 ? (
-                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
                       {editingProduct.shipping_methods.map((method: string) => (
-                      <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
+                        <div key={method} className="bg-gray-800 border border-gray-600 rounded p-3">
                           <div className="flex items-center justify-between">
                             <span className="text-green-400 text-sm font-medium">{method}</span>
                             <button
@@ -2264,100 +2339,120 @@ export default function AdminProducts() {
                     </div>
                   )}
                 </div>
-                        </div>
-                        
-              {/* Shipping Costs */}
-              <div className="grid md:grid-cols-3 gap-4">
-                          <div>
-                  <label className="block text-green-400 text-sm mb-2">Shipping Cost USD</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                    value={editingProduct.shipping_cost_usd || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_usd: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                              placeholder="0.00"
-                            />
-                          </div>
-                          <div>
-                  <label className="block text-green-400 text-sm mb-2">Shipping Cost BTC</label>
-                            <input
-                              type="number"
-                              step="0.00000001"
-                    value={editingProduct.shipping_cost_btc || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_btc: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                              placeholder="0.00000000"
-                            />
-                          </div>
-                          <div>
-                  <label className="block text-green-400 text-sm mb-2">Shipping Cost XMR</label>
-                            <input
-                              type="number"
-                              step="0.000000000001"
-                    value={editingProduct.shipping_cost_xmr || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_xmr: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                              placeholder="0.000000000000"
-                            />
-                </div>
               </div>
 
-              {/* Minimum Order Amounts */}
-              <div className="grid md:grid-cols-2 gap-4">
+              {/* Shipping Costs */}
+              <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-green-400 text-sm mb-2">Minimum Order USD</label>
+                  <label className="block text-green-400 text-sm mb-2">Shipping Cost USD</label>
                   <input
                     type="number"
                     step="0.01"
-                    value={editingProduct.minimum_order_amount_usd || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, minimum_order_amount_usd: e.target.value })}
+                    value={editingProduct.shipping_cost_usd || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_usd: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                     placeholder="0.00"
                   />
                 </div>
                 <div>
-                  <label className="block text-green-400 text-sm mb-2">Minimum Order XMR</label>
+                  <label className="block text-green-400 text-sm mb-2">Shipping Cost BTC</label>
+                  <input
+                    type="number"
+                    step="0.00000001"
+                    value={editingProduct.shipping_cost_btc || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_btc: e.target.value })}
+                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                    placeholder="0.00000000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-green-400 text-sm mb-2">Shipping Cost XMR</label>
                   <input
                     type="number"
                     step="0.000000000001"
-                    value={editingProduct.minimum_order_amount_xmr || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, minimum_order_amount_xmr: e.target.value })}
+                    value={editingProduct.shipping_cost_xmr || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, shipping_cost_xmr: e.target.value })}
                     className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                     placeholder="0.000000000000"
                   />
                 </div>
               </div>
 
-              {/* Listing Type and Unit Type */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Listing Type</label>
-                  <select
-                    value={editingProduct.listing_type || 'escrow'}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, listing_type: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                  >
-                    <option value="escrow">Escrow</option>
-                    <option value="standard">Standard</option>
-                    <option value="auction">Auction</option>
-                  </select>
+              {/* Order Requirements & Listing Details */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-white">Order Requirements & Listing Details</h4>
+                
+                {/* Minimum Order Amounts */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Minimum Order USD</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.minimum_order_amount_usd || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, minimum_order_amount_usd: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Minimum Order XMR</label>
+                    <input
+                      type="number"
+                      step="0.000000000001"
+                      value={editingProduct.minimum_order_amount_xmr || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, minimum_order_amount_xmr: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                      placeholder="0.000000000000"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-green-400 text-sm mb-2">Unit Type</label>
-                  <select
-                    value={editingProduct.unit_type || 'piece'}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, unit_type: e.target.value })}
-                    className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
-                  >
-                    <option value="piece">Piece</option>
-                    <option value="gram">Gram</option>
-                    <option value="ounce">Ounce</option>
-                    <option value="pound">Pound</option>
-                    <option value="kilogram">Kilogram</option>
-                    <option value="liter">Liter</option>
-                    <option value="gallon">Gallon</option>
-                  </select>
+
+                {/* Listing Type and Unit Type */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Listing Type</label>
+                    <select
+                      value={editingProduct.listing_type || 'escrow'}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, listing_type: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                    >
+                      <option value="escrow">Escrow</option>
+                      <option value="direct">Direct</option>
+                      <option value="auction">Auction</option>
+                      <option value="bundle">Bundle</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-green-400 text-sm mb-2">Unit Type</label>
+                    <select
+                      value={editingProduct.unit_type || 'piece'}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, unit_type: e.target.value })}
+                      className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
+                    >
+                      <option value="piece">Piece</option>
+                      <option value="gram">Gram</option>
+                      <option value="kilogram">Kilogram</option>
+                      <option value="ounce">Ounce</option>
+                      <option value="pound">Pound</option>
+                      <option value="liter">Liter</option>
+                      <option value="gallon">Gallon</option>
+                      <option value="meter">Meter</option>
+                      <option value="yard">Yard</option>
+                      <option value="foot">Foot</option>
+                      <option value="inch">Inch</option>
+                      <option value="set">Set</option>
+                      <option value="pair">Pair</option>
+                      <option value="dozen">Dozen</option>
+                      <option value="box">Box</option>
+                      <option value="bottle">Bottle</option>
+                      <option value="can">Can</option>
+                      <option value="bag">Bag</option>
+                      <option value="roll">Roll</option>
+                      <option value="sheet">Sheet</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -2407,7 +2502,10 @@ export default function AdminProducts() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setEditingProduct(null)}
+                  onClick={() => {
+                    setEditingProduct(null);
+                    setVendorSearchTerm('');
+                  }}
                   className="bg-gray-700 hover:bg-gray-600 text-green-400 px-6 py-3 rounded font-bold transition-colors"
                 >
                   Cancel
@@ -2420,8 +2518,14 @@ export default function AdminProducts() {
 
       {/* Shipping Methods Modal */}
       {showShippingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-green-500 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowShippingModal(false)}
+        >
+          <div
+            className="bg-gray-900 border border-green-500 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">Add Shipping Method</h3>
               <button
@@ -2485,7 +2589,7 @@ export default function AdminProducts() {
                       className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                     />
                   </div>
-                  
+
                   <button
                     onClick={() => {
                       if (editingProduct) {
