@@ -149,8 +149,8 @@ export default function Home() {
                 className="bg-gray-900 border border-gray-700 hover:border-red-500 p-6 rounded-lg cursor-pointer transition-all hover:bg-gray-800 group"
               >
                 <div className="text-center">
-                  <div className="text-3xl mb-3">{category.icon || '📦'}</div>
-                  <h3 className="font-bold text-green-400 group-hover:text-red-400 mb-2">{category.name}</h3>
+                  {/* <div className="text-3xl mb-3">{category.icon || '📦'}</div> */}
+                  <h3 className="font-extrabold text-green-400 group-hover:text-red-400 mb-2">{category.name}</h3>
                   {/* <div className="text-yellow-400 font-bold text-lg">{category.count}</div>
                   <p className="text-gray-500 text-xs mt-2">{category.description}</p> */}
                 </div>
