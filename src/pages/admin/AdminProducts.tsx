@@ -2444,6 +2444,7 @@ export default function AdminProducts() {
                       className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                     >
                       <option value="piece">Piece</option>
+                      <option value="pill">Pill</option>
                       <option value="gram">Gram</option>
                       <option value="kilogram">Kilogram</option>
                       <option value="ounce">Ounce</option>
