@@ -6,8 +6,6 @@ import { showGlobalError, showGlobalSuccess } from '../../components/CustomAlert
 import cryptoConverter from '../../lib/cryptoConverter';
 import Breadcrumbs, { BreadcrumbItem } from '../../components/Breadcrumbs';
 
-
-
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -1583,6 +1581,7 @@ export default function AdminProducts() {
                       className="w-full bg-black border border-gray-600 text-green-400 p-3 rounded focus:border-green-500 focus:outline-none"
                     >
                       <option value="piece">Piece</option>
+                      <option value="pill">Piece</option>
                       <option value="gram">Gram</option>
                       <option value="kilogram">Kilogram</option>
                       <option value="ounce">Ounce</option>
